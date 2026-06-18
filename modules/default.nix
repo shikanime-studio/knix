@@ -19,7 +19,7 @@
 with lib;
 
 let
-  cfg = config.kix.rke2;
+  cfg = config.kix;
 
   clusterCidr = filter (cidr: cidr != null) [
     cfg.clusterCidrIPv4
@@ -44,210 +44,189 @@ in
 with lib;
 {
   imports = [
-    ./rke2/longhorn.nix
-    ./rke2/flux.nix
+    ./flux.nix
+    ./longhorn.nix
   ];
 
-  options.kix.rke2 = mkOption {
-    type = types.submodule {
-      options = {
-        enable = mkEnableOption "Kix opinionated RKE2 server";
+  options.kix = {
+    enable = mkEnableOption "Kix opinionated RKE2 server";
 
-        clusterCidrIPv4 = mkOption {
-          type = types.nullOr types.str;
-          default = "10.244.0.0/16";
-          description = "The IPv4 pod CIDR passed to RKE2.";
-        };
+    clusterCidrIPv4 = mkOption {
+      type = types.nullOr types.str;
+      default = "10.244.0.0/16";
+      description = "The IPv4 pod CIDR passed to RKE2.";
+    };
 
-        clusterCidrIPv6 = mkOption {
-          type = types.nullOr types.str;
-          default = "fd00::/108";
-          description = "The IPv6 pod CIDR passed to RKE2.";
-        };
+    clusterCidrIPv6 = mkOption {
+      type = types.nullOr types.str;
+      default = "fd00::/108";
+      description = "The IPv6 pod CIDR passed to RKE2.";
+    };
 
-        nodeCidrMaskSize = mkOption {
-          type = types.int;
-          default = 24;
-          description = "The IPv4 node CIDR mask size passed to the controller manager.";
-        };
+    nodeCidrMaskSize = mkOption {
+      type = types.int;
+      default = 24;
+      description = "The IPv4 node CIDR mask size passed to the controller manager.";
+    };
 
-        nodeCidrMaskSizeIPv6 = mkOption {
-          type = types.int;
-          default = 112;
-          description = "The IPv6 node CIDR mask size passed to the controller manager.";
-        };
+    nodeCidrMaskSizeIPv6 = mkOption {
+      type = types.int;
+      default = 112;
+      description = "The IPv6 node CIDR mask size passed to the controller manager.";
+    };
 
-        serviceCidr = mkOption {
-          type = types.nullOr types.str;
-          default = "10.96.0.0/12,fd01::/108";
-          description = "The service CIDR passed to RKE2.";
-        };
+    serviceCidr = mkOption {
+      type = types.nullOr types.str;
+      default = "10.96.0.0/12,fd01::/108";
+      description = "The service CIDR passed to RKE2.";
+    };
 
-        interface = mkOption {
-          type = types.str;
-          default = "enp1s0";
-          description = "The WAN interface used for firewall policy.";
-        };
+    interface = mkOption {
+      type = types.str;
+      default = "enp1s0";
+      description = "The WAN interface used for firewall policy.";
+    };
 
-        extraConfig = mkOption {
-          type = types.attrsOf types.raw;
-          default = { };
-          description = "Additional direct values merged into services.rke2.";
-        };
+    extraConfig = mkOption {
+      type = types.attrsOf types.raw;
+      default = { };
+      description = "Additional direct values merged into services.rke2.";
+    };
 
-        # Kernel tuning — applied automatically when RKE2 is enabled
-        kernel = mkOption {
-          type = types.submodule {
-            options = {
-              sysctl = mkOption {
-                type = types.attrsOf (types.either types.int types.str);
-                default = {
-                  # File and Inotify limits
-                  "fs.file-max" = 2097152;
-                  "fs.inotify.max_user_instances" = 8192;
-                  "fs.inotify.max_user_watches" = 524288;
-
-                  # Bridge networking for CNIs
-                  "net.bridge.bridge-nf-call-ip6tables" = 1;
-                  "net.bridge.bridge-nf-call-iptables" = 1;
-
-                  # Networking queueing and buffer sizing
-                  "net.core.default_qdisc" = "fq";
-                  "net.core.netdev_max_backlog" = 16384;
-                  "net.core.rmem_default" = 7340032;
-                  "net.core.rmem_max" = 16777216;
-                  "net.core.somaxconn" = 4096;
-                  "net.core.wmem_default" = 7340032;
-                  "net.core.wmem_max" = 16777216;
-
-                  # Forwarding, TCP autotuning, and BBR
-                  "net.ipv4.ip_forward" = 1;
-                  "net.ipv4.conf.all.rp_filter" = 0;
-                  "net.ipv4.conf.default.rp_filter" = 0;
-                  "net.ipv4.ip_local_port_range" = "1024 65535";
-                  "net.ipv4.tcp_congestion_control" = "bbr";
-                  "net.ipv4.tcp_fin_timeout" = 15;
-                  "net.ipv4.tcp_keepalive_time" = 600;
-                  "net.ipv4.tcp_mtu_probing" = 1;
-                  "net.ipv4.tcp_rmem" = "4096 87380 16777216";
-                  "net.ipv4.tcp_wmem" = "4096 65536 16777216";
-
-                  # GC thresholds for ARP/Neighbor tables
-                  "net.ipv4.neigh.default.gc_thresh1" = 1024;
-                  "net.ipv4.neigh.default.gc_thresh2" = 2048;
-                  "net.ipv4.neigh.default.gc_thresh3" = 4096;
-                  "net.ipv6.conf.all.forwarding" = 1;
-                  "net.ipv6.conf.default.forwarding" = 1;
-
-                  # Conntrack limits
-                  "net.netfilter.nf_conntrack_max" = 262144;
-
-                  # Prevent mmap OOM crashes
-                  "vm.max_map_count" = 262144;
-                };
-                description = "Sysctl values applied to all RKE2 nodes.";
-              };
-
-              modules = mkOption {
-                type = types.listOf types.str;
-                default = [
-                  "br_netfilter"
-                  "overlay"
-                  "tcp_bbr"
-                ];
-                description = "Kernel modules loaded on RKE2 nodes.";
-              };
+    kernel = mkOption {
+      type = types.submodule {
+        options = {
+          sysctl = mkOption {
+            type = types.attrsOf (types.either types.int types.str);
+            default = {
+              "fs.file-max" = 2097152;
+              "fs.inotify.max_user_instances" = 8192;
+              "fs.inotify.max_user_watches" = 524288;
+              "net.bridge.bridge-nf-call-ip6tables" = 1;
+              "net.bridge.bridge-nf-call-iptables" = 1;
+              "net.core.default_qdisc" = "fq";
+              "net.core.netdev_max_backlog" = 16384;
+              "net.core.rmem_default" = 7340032;
+              "net.core.rmem_max" = 16777216;
+              "net.core.somaxconn" = 4096;
+              "net.core.wmem_default" = 7340032;
+              "net.core.wmem_max" = 16777216;
+              "net.ipv4.ip_forward" = 1;
+              "net.ipv4.conf.all.rp_filter" = 0;
+              "net.ipv4.conf.default.rp_filter" = 0;
+              "net.ipv4.ip_local_port_range" = "1024 65535";
+              "net.ipv4.tcp_congestion_control" = "bbr";
+              "net.ipv4.tcp_fin_timeout" = 15;
+              "net.ipv4.tcp_keepalive_time" = 600;
+              "net.ipv4.tcp_mtu_probing" = 1;
+              "net.ipv4.tcp_rmem" = "4096 87380 16777216";
+              "net.ipv4.tcp_wmem" = "4096 65536 16777216";
+              "net.ipv4.neigh.default.gc_thresh1" = 1024;
+              "net.ipv4.neigh.default.gc_thresh2" = 2048;
+              "net.ipv4.neigh.default.gc_thresh3" = 4096;
+              "net.ipv6.conf.all.forwarding" = 1;
+              "net.ipv6.conf.default.forwarding" = 1;
+              "net.netfilter.nf_conntrack_max" = 262144;
+              "vm.max_map_count" = 262144;
             };
+            description = "Sysctl values applied to all RKE2 nodes.";
           };
-          default = { };
-          description = "Kernel tuning applied automatically when RKE2 is enabled.";
-        };
 
-        # Tailscale integration
-        tailscale = mkOption {
-          type = types.submodule {
-            options = {
-              enable = mkEnableOption "Tailscale integration for RKE2 nodes";
-
-              useRoutingFeatures = mkOption {
-                type = types.enum [
-                  "client"
-                  "server"
-                  "both"
-                ];
-                default = "server";
-                description = "Tailscale routing mode.";
-              };
-
-              advertisePodCIDR = mkOption {
-                type = types.bool;
-                default = true;
-                description = "Whether to advertise the pod CIDR as a Tailscale subnet route.";
-              };
-
-              ssh = mkOption {
-                type = types.bool;
-                default = true;
-                description = "Whether to enable Tailscale SSH.";
-              };
-            };
+          modules = mkOption {
+            type = types.listOf types.str;
+            default = [
+              "br_netfilter"
+              "overlay"
+              "tcp_bbr"
+            ];
+            description = "Kernel modules loaded on RKE2 nodes.";
           };
-          default = { };
-          description = "Tailscale integration settings.";
-        };
-
-        # Service defaults — avahi, openssh, etc.
-        services = mkOption {
-          type = types.submodule {
-            options = {
-              avahi = mkOption {
-                type = types.submodule {
-                  options = {
-                    enable = mkEnableOption "Avahi mDNS/DNS-SD for RKE2 nodes";
-                  };
-                };
-                default = {
-                  enable = true;
-                };
-                description = "Avahi mDNS settings.";
-              };
-
-              openssh = mkOption {
-                type = types.submodule {
-                  options = {
-                    enable = mkEnableOption "OpenSSH for RKE2 nodes";
-                  };
-                };
-                default = {
-                  enable = true;
-                };
-                description = "OpenSSH settings.";
-              };
-
-              fstrim = mkOption {
-                type = types.submodule {
-                  options = {
-                    enable = mkEnableOption "periodic fstrim for RKE2 nodes";
-                  };
-                };
-                default = {
-                  enable = true;
-                };
-                description = "Periodic fstrim settings.";
-              };
-            };
-          };
-          default = { };
-          description = "Service defaults for RKE2 nodes.";
         };
       };
+      default = { };
+      description = "Kernel tuning applied automatically when RKE2 is enabled.";
     };
-    default = { };
-    description = "Kix opinionated RKE2 deployment module.";
+
+    tailscale = mkOption {
+      type = types.submodule {
+        options = {
+          enable = mkEnableOption "Tailscale integration for RKE2 nodes";
+
+          useRoutingFeatures = mkOption {
+            type = types.enum [
+              "client"
+              "server"
+              "both"
+            ];
+            default = "server";
+            description = "Tailscale routing mode.";
+          };
+
+          advertisePodCIDR = mkOption {
+            type = types.bool;
+            default = true;
+            description = "Whether to advertise the pod CIDR as a Tailscale subnet route.";
+          };
+
+          ssh = mkOption {
+            type = types.bool;
+            default = true;
+            description = "Whether to enable Tailscale SSH.";
+          };
+        };
+      };
+      default = { };
+      description = "Tailscale integration settings.";
+    };
+
+    services = mkOption {
+      type = types.submodule {
+        options = {
+          avahi = mkOption {
+            type = types.submodule {
+              options = {
+                enable = mkEnableOption "Avahi mDNS/DNS-SD for RKE2 nodes";
+              };
+            };
+            default = {
+              enable = true;
+            };
+            description = "Avahi mDNS settings.";
+          };
+
+          openssh = mkOption {
+            type = types.submodule {
+              options = {
+                enable = mkEnableOption "OpenSSH for RKE2 nodes";
+              };
+            };
+            default = {
+              enable = true;
+            };
+            description = "OpenSSH settings.";
+          };
+
+          fstrim = mkOption {
+            type = types.submodule {
+              options = {
+                enable = mkEnableOption "periodic fstrim for RKE2 nodes";
+              };
+            };
+            default = {
+              enable = true;
+            };
+            description = "Periodic fstrim settings.";
+          };
+        };
+      };
+      default = { };
+      description = "Service defaults for RKE2 nodes.";
+    };
   };
 
+  description = "Kix opinionated RKE2 deployment module.";
+
   config = mkIf cfg.enable {
-    # Kernel tuning
     boot.kernelModules = cfg.kernel.modules;
     boot.kernel.sysctl = mkMerge [
       cfg.kernel.sysctl
@@ -262,7 +241,6 @@ with lib;
       }
     ];
 
-    # RKE2 server configuration
     services.rke2 = mkMerge [
       {
         enable = true;
@@ -357,11 +335,8 @@ with lib;
       cfg.extraConfig
     ];
 
-    # Firewall — IPv6-safe rules
     networking.firewall = {
       extraCommands = ''
-        # Keep public IPv6 egress off the WAN interface so runtimes fall back
-        # to IPv4 while still allowing local and tailnet traffic.
         ip6tables -A OUTPUT -o ${cfg.interface} -d ::1/128 -j ACCEPT
         ip6tables -A OUTPUT -o ${cfg.interface} -d fe80::/10 -j ACCEPT
         ip6tables -A OUTPUT -o ${cfg.interface} -d fc00::/7 -j ACCEPT
@@ -395,7 +370,6 @@ with lib;
       };
     };
 
-    # Tailscale integration
     services.tailscale = mkIf cfg.tailscale.enable {
       enable = true;
       openFirewall = true;
@@ -403,7 +377,6 @@ with lib;
       extraUpFlags = [ "--ssh" ];
     };
 
-    # Service defaults
     services.avahi = mkIf cfg.services.avahi.enable {
       enable = true;
       nssmdns4 = true;
@@ -424,7 +397,6 @@ with lib;
       enable = true;
     };
 
-    # DNS preference — IPv4 over IPv6 for public resolution
     networking.getaddrinfo.precedence = {
       "::1/128" = 50;
       "::/0" = 40;

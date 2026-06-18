@@ -10,11 +10,11 @@
 }:
 
 let
-  cfg = config.kix.rke2;
+  cfg = config.kix;
 in
 with lib;
 {
-  options.kix.rke2.flux = mkOption {
+  options.kix.flux = mkOption {
     type = types.submodule {
       options = {
         enable = mkEnableOption "Flux bootstrap and management for RKE2";

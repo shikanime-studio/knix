@@ -91,14 +91,13 @@
       systems = [
         "x86_64-linux"
         "aarch64-linux"
+        "x86_64-darwin"
         "aarch64-darwin"
       ];
 
       flake = {
-        nixosModule = import ./modules/nixos/rke2;
-        nixosModules = {
-          default = import ./modules/nixos/rke2;
-        };
+        nixosModule = import ./modules;
+        nixosModules.default = import ./modules;
       };
     };
 }

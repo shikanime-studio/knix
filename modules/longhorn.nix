@@ -11,11 +11,11 @@
 }:
 
 let
-  cfg = config.kix.rke2;
+  cfg = config.kix;
 in
 with lib;
 {
-  options.kix.rke2.longhorn = mkOption {
+  options.kix.longhorn = mkOption {
     type = types.submodule {
       options = {
         enable = mkEnableOption "Longhorn integration for RKE2";

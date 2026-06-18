@@ -16,7 +16,7 @@
 
 ## Module design
 
-- All options under `kix.rke2.*`
-- Each concern in its own file under `modules/nixos/rke2/`
+- All options under `kix.*`
+- Each concern in its own file under `modules/`
 - `default.nix` is the entry point that imports all submodules
-- Follow the Catppuccin pattern: `nixosModules.default = import ./modules/nixos/rke2`
+- Follow the Catppuccin pattern: `nixosModules.default = import ./modules`
