@@ -1,51 +1,32 @@
-# Kix — Kubernetes+nix
+# Knix
 
-Opinionated RKE2 deployment module for NixOS.
+Knix is the Nix module set I use to bring up an RKE2 cluster with a sensible
+default setup. It gives you a ready-to-use base for Kubernetes on NixOS, while
+still leaving room to tweak networking, Flux, and storage.
 
-## What Kix Does
+## What You Get
 
-Kix turns a fresh NixOS install into a production-hardened RKE2 Kubernetes node with:
-
-- **CIS-hardened RKE2 server** — secrets encryption, graceful shutdown, Multus + Canal CNI
-- **WireGuard-encrypted pod networking** — Cilium kube-proxy replacement with Hubble observability
-- **Flux CD GitOps** — automated cluster state reconciliation from a Git repository
-- **Longhorn distributed storage** — auto-discovering additional disks with SSD/HDD tagging
-- **Tailscale integration** — secure cluster access with subnet route advertisement
-- **IPv6-safe firewall** — blocks public IPv6 egress on the WAN interface while allowing local and tailnet traffic
-- **Kernel tuning** — BBR congestion control, bridge netfilter, overlay fs, conntrack limits
-
-## Design
-
-Kix takes inspiration from:
-
-- **numtide** — flake-parts for modular flake composition, treefmt-nix for formatting
-- **x-shikanime** — consistent flake structure, devenv shells, cachix substituters
-- **Catppuccin** — layered options design with `default` aliases and submodule composition
-
-## Module Structure
-
-```
-kix.nixosModules.default          # Entry point — imports all submodules
-├── modules/default.nix           # Core RKE2 server + kernel tuning + firewall
-├── modules/flux.nix              # Flux CD GitOps (instance, operator, tofu-controller)
-└── modules/longhorn.nix          # Longhorn distributed storage
-```
+- An RKE2 server with the defaults I rely on
+- Pod and service networking defaults that work well with IPv4 and IPv6
+- Optional Flux CD integration for GitOps
+- Optional Longhorn deployment for persistent storage
+- A small option surface under `knix.*`
 
 ## Quick Start
 
-Add kix as a flake input:
+Add Knix as a flake input:
 
 ```nix
 {
-  inputs.kix.url = "github:x-shikanime/kix";
+  inputs.knix.url = "github:shikanime-studio/knix";
 
-  outputs = { self, nixpkgs, kix, ... }:
+  outputs = { self, nixpkgs, knix, ... }:
     {
       nixosConfigurations.myhost = nixpkgs.lib.nixosSystem {
         modules = [
-          kix.nixosModules.default
+          knix.nixosModules.default
           {
-            kix.enable = true;
+            knix.enable = true;
           }
         ];
       };
@@ -53,98 +34,20 @@ Add kix as a flake input:
 }
 ```
 
-That's it. Kix applies its opinionated defaults. Override any option to customize.
+That is enough to get the default RKE2 stack.
 
-## Options Reference
+## Common Settings
 
-All options live under `kix.*`:
-
-### Core
-
-| Option | Default | Description |
-|---|---|---|
-| `kix.enable` | `false` | Master switch — enables the full RKE2 stack |
-| `kix.clusterCidrIPv4` | `"10.244.0.0/16"` | IPv4 pod CIDR |
-| `kix.clusterCidrIPv6` | `"fd00::/108"` | IPv6 pod CIDR |
-| `kix.serviceCidr` | `"10.96.0.0/12,fd01::/108"` | Service CIDR |
-| `kix.interface` | `"enp1s0"` | WAN interface for firewall policy |
-| `kix.nodeCidrMaskSize` | `24` | IPv4 node CIDR mask size |
-| `kix.nodeCidrMaskSizeIPv6` | `112` | IPv6 node CIDR mask size |
-| `kix.extraConfig` | `{}` | Raw merge into `services.rke2` |
-
-### Kernel Tuning
-
-| Option | Default | Description |
-|---|---|---|
-| `kix.kernel.modules` | `[ "br_netfilter" "overlay" "tcp_bbr" ]` | Kernel modules to load |
-| `kix.kernel.sysctl` | *(production defaults)* | Sysctl values — override individual keys |
-
-### Tailscale
-
-| Option | Default | Description |
-|---|---|---|
-| `kix.tailscale.enable` | `false` | Enable Tailscale integration |
-| `kix.tailscale.useRoutingFeatures` | `"server"` | Tailscale routing mode |
-| `kix.tailscale.ssh` | `true` | Enable Tailscale SSH |
-
-### Services
-
-| Option | Default | Description |
-|---|---|---|
-| `kix.services.avahi.enable` | `true` | Avahi mDNS/DNS-SD |
-| `kix.services.openssh.enable` | `true` | OpenSSH server |
-| `kix.services.fstrim.enable` | `true` | Periodic fstrim |
-
-### Flux CD
-
-| Option | Default | Description |
-|---|---|---|
-| `kix.flux.enable` | `false` | Enable Flux GitOps |
-| `kix.flux.repoUrl` | `"https://github.com/shikanime/manifests.git"` | Git repository URL |
-| `kix.flux.path` | `"clusters/nishir/overlays/tailnet"` | Kustomization path |
-| `kix.flux.ref` | `"refs/heads/main"` | Git ref to track |
-| `kix.flux.instance.version` | `"0.46.0"` | Flux instance chart version |
-| `kix.flux.operator.version` | `"0.46.0"` | Flux operator chart version |
-| `kix.flux.tofu.version` | `"0.16.2"` | tofu-controller chart version |
-
-### Longhorn
-
-| Option | Default | Description |
-|---|---|---|
-| `kix.longhorn.enable` | `false` | Enable Longhorn storage |
-| `kix.longhorn.mountRoot` | `"/mnt"` | Mount root scanned for additional disks |
-| `kix.longhorn.storageReservedPercent` | `30` | Reserved disk space percentage |
-
-## Examples
-
-### Minimal — just RKE2
+Use these when you want to adjust the cluster without rewriting the module:
 
 ```nix
 {
-  kix.enable = true;
-}
-```
-
-### Full stack with Flux and Longhorn
-
-```nix
-{
-  kix = {
+  knix = {
     enable = true;
-    flux.enable = true;
-    longhorn.enable = true;
-    tailscale.enable = true;
-  };
-}
-```
-
-### Custom networking
-
-```nix
-{
-  kix = {
-    enable = true;
-    clusterCidrIPv4 = "10.42.0.0/16";
+    nodeIP = "192.168.1.30";
+    serverAddr = "https://192.168.1.28:9345";
+    tokenFile = config.sops.secrets.rke2-token.path;
+    clusterCidr = "10.42.0.0/16";
     clusterCidrIPv6 = "fd01::/108";
     serviceCidr = "10.43.0.0/16,fd02::/108";
     interface = "eth0";
@@ -152,34 +55,90 @@ All options live under `kix.*`:
 }
 ```
 
-### Custom Flux repository
+## Flux CD
+
+Enable Flux when you want the cluster to reconcile itself from a Git repository:
 
 ```nix
 {
-  kix = {
+  knix = {
     enable = true;
-    flux = {
-      enable = true;
-      repoUrl = "https://github.com/my-org/cluster-config.git";
-      path = "clusters/production";
-    };
+    flux.enable = true;
+    flux.repoUrl = "https://github.com/my-org/cluster-config.git";
+    flux.path = "clusters/production";
   };
 }
 ```
 
-### Override kernel sysctl
+## Longhorn
+
+Enable Longhorn when you want persistent storage managed by the cluster:
 
 ```nix
 {
-  kix = {
+  knix = {
     enable = true;
-    kernel.sysctl = {
-      "net.core.rmem_max" = 33554432;
-      "vm.max_map_count" = 524288;
-    };
+    longhorn.enable = true;
   };
 }
 ```
+
+## Options
+
+All options live under `knix.*`.
+
+### Core
+
+| Option                      | Default                     | Purpose                                  |
+| --------------------------- | --------------------------- | ---------------------------------------- |
+| `knix.enable`               | `false`                     | Turn the Knix module on                  |
+| `knix.clusterCidr`          | `"10.244.0.0/16"`           | IPv4 pod CIDR                            |
+| `knix.clusterCidrIPv6`      | `"fd00::/108"`              | IPv6 pod CIDR                            |
+| `knix.serviceCidr`          | `"10.96.0.0/12,fd01::/108"` | Service CIDR                             |
+| `knix.interface`            | `"enp1s0"`                  | WAN interface used by the firewall rules |
+| `knix.nodeIP`               | `null`                      | Node IPs passed to RKE2                  |
+| `knix.serverAddr`           | `null`                      | RKE2 server address                      |
+| `knix.tokenFile`            | `null`                      | RKE2 join token file                     |
+| `knix.nodeCidrMaskSize`     | `24`                        | IPv4 node CIDR mask size                 |
+| `knix.nodeCidrMaskSizeIPv6` | `112`                       | IPv6 node CIDR mask size                 |
+
+### Flux CD
+
+| Option                       | Default                                        | Purpose                       |
+| ---------------------------- | ---------------------------------------------- | ----------------------------- |
+| `knix.flux.enable`           | `false`                                        | Enable Flux CD                |
+| `knix.flux.repoUrl`          | `"https://github.com/shikanime/manifests.git"` | Git repository used by Flux   |
+| `knix.flux.path`             | `"clusters/nishir/overlays/tailnet"`           | Kustomization path            |
+| `knix.flux.ref`              | `"refs/heads/main"`                            | Git ref to track              |
+| `knix.flux.instance.version` | `"0.46.0"`                                     | Flux instance chart version   |
+| `knix.flux.operator.version` | `"0.46.0"`                                     | Flux operator chart version   |
+| `knix.flux.tofu.version`     | `"0.16.2"`                                     | tofu-controller chart version |
+
+### Longhorn
+
+| Option                      | Default    | Purpose                                      |
+| --------------------------- | ---------- | -------------------------------------------- |
+| `knix.longhorn.enable`      | `false`    | Enable Longhorn                              |
+| `knix.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
+| `knix.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
+
+Longhorn also keeps the existing disk helper used by my cluster setup.
+
+## How It Is Structured
+
+```text
+knix.nixosModules.default   # Main entry point
+├── modules/knix.nix        # Public option surface
+├── modules/rke2.nix        # RKE2 server and cluster defaults
+├── modules/flux.nix        # Flux CD integration
+└── modules/longhorn.nix    # Longhorn helper + HelmChart deployment
+```
+
+## Notes
+
+- `knix.enable = true` is the main switch.
+- You can enable Flux and Longhorn independently.
+- The module is opinionated by design.
 
 ## License
 

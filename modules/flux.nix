@@ -1,4 +1,4 @@
-# Kix — Flux CD GitOps integration for RKE2
+# Knix — Flux CD GitOps integration for RKE2
 #
 # Deploys the Flux v2 stack (instance, operator, tofu-controller) via RKE2
 # auto-deploy charts with SOPS age decryption support.
@@ -10,11 +10,11 @@
 }:
 
 let
-  cfg = config.kix;
+  cfg = config.knix;
 in
 with lib;
 {
-  options.kix.flux = mkOption {
+  options.knix.flux = mkOption {
     type = types.submodule {
       options = {
         enable = mkEnableOption "Flux bootstrap and management for RKE2";
@@ -135,12 +135,12 @@ with lib;
       };
     };
     default = { };
-    description = "Flux bootstrap and management for the Kix RKE2 stack.";
+    description = "Flux bootstrap and management for the Knix RKE2 stack.";
   };
 
   config = mkIf cfg.flux.enable {
     services.rke2 = {
-      autoDeployCharts = mkMerge [
+      autoDeployCharts =
         (optionalAttrs cfg.flux.instance.enable {
           flux = {
             createNamespace = true;
@@ -190,7 +190,7 @@ with lib;
             version = cfg.flux.instance.version;
           };
         })
-        (optionalAttrs cfg.flux.operator.enable {
+        // (optionalAttrs cfg.flux.operator.enable {
           flux-operator = {
             createNamespace = true;
             extraDeploy = optional (cfg.flux.operator.extraConfig != { }) {
@@ -220,7 +220,7 @@ with lib;
             version = cfg.flux.operator.version;
           };
         })
-        (optionalAttrs cfg.flux.tofu.enable {
+        // (optionalAttrs cfg.flux.tofu.enable {
           tofu-controller = {
             createNamespace = true;
             extraDeploy = optional (cfg.flux.tofu.extraConfig != { }) {
@@ -246,8 +246,7 @@ with lib;
             };
             version = cfg.flux.tofu.version;
           };
-        })
-      ];
+        });
     };
 
     systemd.services.rke2-flux-sops-age = {

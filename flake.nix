@@ -1,5 +1,5 @@
 {
-  description = "Kubernetes+nix — Opinionated RKE2 deployment module";
+  description = "Knix — Opinionated, hardened, secure-by-default RKE2 deployment module";
 
   inputs = {
     devenv = {
@@ -68,25 +68,28 @@
         treefmt-nix.flakeModule
       ];
 
-      perSystem = {
-        pkgs,
-        lib,
-        ...
-      }: {
-        devenv.shells.default = {
-          imports = [
-            devlib.devenvModules.git
-            devlib.devenvModules.nix
-            devlib.devenvModules.opentofu
-            devlib.devenvModules.shell
-            devlib.devenvModules.shikanime-studio
-          ];
+      perSystem =
+        {
+          pkgs,
+          lib,
+          ...
+        }:
+        {
+          devenv.shells.default = {
+            imports = [
+              devlib.devenvModules.git
+              devlib.devenvModules.nix
+              devlib.devenvModules.opentofu
+              devlib.devenvModules.shell
+              devlib.devenvModules.shikanime-studio
+            ];
 
-          packages = [
-            pkgs.skaffold
-          ] ++ lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.nixos-facter;
+            packages = [
+              pkgs.skaffold
+            ]
+            ++ lib.optional pkgs.stdenv.hostPlatform.isLinux pkgs.nixos-facter;
+          };
         };
-      };
 
       systems = [
         "x86_64-linux"
@@ -97,7 +100,10 @@
 
       flake = {
         nixosModule = import ./modules;
-        nixosModules.default = import ./modules;
+        nixosModules = {
+          default = import ./modules;
+          knix = import ./modules;
+        };
       };
     };
 }
