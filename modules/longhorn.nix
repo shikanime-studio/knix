@@ -181,6 +181,7 @@ with lib;
       spec = {
         chart = "longhorn";
         createNamespace = true;
+        failurePolicy = "abort";
         releaseName = "longhorn";
         targetNamespace = "longhorn-system";
         inherit (cfg) version;

@@ -9,6 +9,15 @@ with lib;
   options.knix = {
     enable = mkEnableOption "Knix opinionated RKE2 server";
 
+    role = mkOption {
+      type = types.enum [
+        "agent"
+        "server"
+      ];
+      default = "server";
+      description = "The RKE2 node role.";
+    };
+
     clusterCidr = mkOption {
       type = types.nullOr types.str;
       default = "10.244.0.0/16";
@@ -61,6 +70,12 @@ with lib;
       type = types.nullOr types.path;
       default = null;
       description = "The token file passed to RKE2.";
+    };
+
+    extraConfig = mkOption {
+      type = types.attrsOf types.raw;
+      default = { };
+      description = "Additional direct values merged into services.rke2.";
     };
   };
 }

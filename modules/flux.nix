@@ -144,6 +144,7 @@ with lib;
         (optionalAttrs cfg.flux.instance.enable {
           flux = {
             createNamespace = true;
+            failurePolicy = "abort";
             extraDeploy = optional (cfg.flux.instance.extraConfig != { }) {
               apiVersion = "helm.cattle.io/v1";
               kind = "HelmChartConfig";
@@ -193,6 +194,7 @@ with lib;
         // (optionalAttrs cfg.flux.operator.enable {
           flux-operator = {
             createNamespace = true;
+            failurePolicy = "abort";
             extraDeploy = optional (cfg.flux.operator.extraConfig != { }) {
               apiVersion = "helm.cattle.io/v1";
               kind = "HelmChartConfig";
@@ -223,6 +225,7 @@ with lib;
         // (optionalAttrs cfg.flux.tofu.enable {
           tofu-controller = {
             createNamespace = true;
+            failurePolicy = "abort";
             extraDeploy = optional (cfg.flux.tofu.extraConfig != { }) {
               apiVersion = "helm.cattle.io/v1";
               kind = "HelmChartConfig";
