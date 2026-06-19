@@ -1,7 +1,3 @@
-# Knix — Flux CD GitOps integration for RKE2
-#
-# Deploys the Flux v2 stack (instance, operator, tofu-controller) via RKE2
-# auto-deploy charts with SOPS age decryption support.
 {
   config,
   lib,
@@ -14,242 +10,106 @@ let
 in
 with lib;
 {
-  options.knix.flux = mkOption {
+  options.knix.addons.flux = mkOption {
     type = types.submodule {
       options = {
-        enable = mkEnableOption "Flux bootstrap and management for RKE2";
+        enable = mkOption {
+          type = types.bool;
+          default = true;
+          description = "Whether to enable the Flux addon.";
+        };
 
-        instance = mkOption {
-          type = types.submodule {
-            options = {
-              enable = mkOption {
-                type = types.bool;
-                default = true;
-                description = "Whether to deploy the Flux instance chart.";
-              };
-
-              extraConfig = mkOption {
-                type = types.attrsOf types.raw;
-                default = { };
-                description = "Additional raw configuration merged into the Flux instance chart.";
-              };
-
-              hash = mkOption {
-                type = types.str;
-                default = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
-                description = "The Flux instance chart hash.";
-              };
-
-              version = mkOption {
-                type = types.str;
-                default = "0.46.0";
-                description = "The Flux instance chart version.";
-              };
-            };
-          };
+        instance.extraConfig = mkOption {
+          type = types.attrsOf types.raw;
           default = { };
-          description = "Flux instance chart settings.";
+          description = "Additional Flux instance chart values.";
         };
 
-        operator = mkOption {
-          type = types.submodule {
-            options = {
-              enable = mkOption {
-                type = types.bool;
-                default = true;
-                description = "Whether to deploy the Flux operator chart.";
-              };
-
-              extraConfig = mkOption {
-                type = types.attrsOf types.raw;
-                default = { };
-                description = "Additional raw configuration merged into the Flux operator chart.";
-              };
-
-              hash = mkOption {
-                type = types.str;
-                default = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
-                description = "The Flux operator chart hash.";
-              };
-
-              version = mkOption {
-                type = types.str;
-                default = "0.46.0";
-                description = "The Flux operator chart version.";
-              };
-            };
-          };
+        operator.extraConfig = mkOption {
+          type = types.attrsOf types.raw;
           default = { };
-          description = "Flux operator chart settings.";
+          description = "Additional Flux operator chart values.";
         };
 
-        path = mkOption {
-          type = types.str;
-          default = "clusters/nishir/overlays/tailnet";
-          description = "The Kustomization path used by Flux.";
-        };
-
-        ref = mkOption {
-          type = types.str;
-          default = "refs/heads/main";
-          description = "The Git ref Flux tracks.";
-        };
-
-        repoUrl = mkOption {
-          type = types.str;
-          default = "https://github.com/shikanime/manifests.git";
-          description = "The Git repository Flux bootstraps from.";
-        };
-
-        tofu = mkOption {
-          type = types.submodule {
-            options = {
-              enable = mkOption {
-                type = types.bool;
-                default = true;
-                description = "Whether to deploy the tofu-controller chart.";
-              };
-
-              extraConfig = mkOption {
-                type = types.attrsOf types.raw;
-                default = { };
-                description = "Additional raw configuration merged into the tofu-controller chart.";
-              };
-
-              hash = mkOption {
-                type = types.str;
-                default = "sha256-YQRWHQwNn+Du9LNcveCBzTnacRDtWNJHwvXxeIxtKcc=";
-                description = "The tofu-controller chart hash.";
-              };
-
-              version = mkOption {
-                type = types.str;
-                default = "0.16.2";
-                description = "The tofu-controller chart version.";
-              };
-            };
-          };
+        tofu.extraConfig = mkOption {
+          type = types.attrsOf types.raw;
           default = { };
-          description = "tofu-controller chart settings.";
+          description = "Additional tofu-controller chart values.";
         };
       };
     };
     default = { };
-    description = "Flux bootstrap and management for the Knix RKE2 stack.";
+    description = "Flux addon settings.";
   };
 
-  config = mkIf cfg.flux.enable {
-    services.rke2 = {
-      autoDeployCharts =
-        (optionalAttrs cfg.flux.instance.enable {
-          flux = {
-            createNamespace = true;
-            failurePolicy = "abort";
-            extraDeploy = optional (cfg.flux.instance.extraConfig != { }) {
-              apiVersion = "helm.cattle.io/v1";
-              kind = "HelmChartConfig";
-              metadata = {
-                name = "flux";
-                namespace = "kube-system";
-              };
-              spec.valuesContent = builtins.toJSON cfg.flux.instance.extraConfig;
+  config = mkIf cfg.addons.flux.enable {
+    knix.charts = {
+      flux = {
+        createNamespace = true;
+        extraFieldDefinitions.failurePolicy = "abort";
+        hash = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
+        name = "flux-instance";
+        repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance";
+        targetNamespace = "flux-system";
+        version = "0.46.0";
+        values = recursiveUpdate {
+          instance = {
+            distribution = {
+              registry = "ghcr.io/fluxcd";
+              version = "2.x";
             };
-            extraFieldDefinitions.failurePolicy = "abort";
-            hash = cfg.flux.instance.hash;
-            name = "flux-instance";
-            repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance";
-            targetNamespace = "flux-system";
-            values = {
-              instance = {
-                distribution = {
-                  registry = "ghcr.io/fluxcd";
-                  version = "2.x";
-                };
-                kustomize.patches = [
-                  {
-                    patch = ''
-                      - op: add
-                        path: /spec/decryption
-                        value:
-                          provider: sops
-                          secretRef:
-                            name: sops-age
-                    '';
-                    target.kind = "Kustomization";
-                  }
-                ];
-                sync = {
-                  interval = "1m";
-                  kind = "GitRepository";
-                  path = cfg.flux.path;
-                  pullSecret = "";
-                  ref = cfg.flux.ref;
-                  url = cfg.flux.repoUrl;
-                };
-              };
-            };
-            version = cfg.flux.instance.version;
+            kustomize.patches = [
+              {
+                patch = ''
+                  - op: add
+                    path: /spec/decryption
+                    value:
+                      provider: sops
+                      secretRef:
+                        name: sops-age
+                '';
+                target.kind = "Kustomization";
+              }
+            ];
           };
-        })
-        // (optionalAttrs cfg.flux.operator.enable {
-          flux-operator = {
-            createNamespace = true;
-            failurePolicy = "abort";
-            extraDeploy = optional (cfg.flux.operator.extraConfig != { }) {
-              apiVersion = "helm.cattle.io/v1";
-              kind = "HelmChartConfig";
-              metadata = {
-                name = "flux-operator";
-                namespace = "kube-system";
-              };
-              spec.valuesContent = builtins.toJSON cfg.flux.operator.extraConfig;
+        } cfg.addons.flux.instance.extraConfig;
+      };
+
+      "flux-operator" = {
+        createNamespace = true;
+        extraFieldDefinitions.failurePolicy = "abort";
+        hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
+        name = "flux-operator";
+        repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator";
+        targetNamespace = "flux-system";
+        version = "0.46.0";
+        values = recursiveUpdate {
+          web.config.authentication = {
+            anonymous = {
+              groups = [ "system:masters" ];
+              username = "admin";
             };
-            extraFieldDefinitions.failurePolicy = "abort";
-            hash = cfg.flux.operator.hash;
-            name = "flux-operator";
-            repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator";
-            targetNamespace = "flux-system";
-            values = {
-              healthcheck.enabled = true;
-              web.config.authentication = {
-                anonymous = {
-                  groups = [ "system:masters" ];
-                  username = "admin";
-                };
-                type = "Anonymous";
-              };
-            };
-            version = cfg.flux.operator.version;
+            type = "Anonymous";
           };
-        })
-        // (optionalAttrs cfg.flux.tofu.enable {
-          tofu-controller = {
-            createNamespace = true;
-            failurePolicy = "abort";
-            extraDeploy = optional (cfg.flux.tofu.extraConfig != { }) {
-              apiVersion = "helm.cattle.io/v1";
-              kind = "HelmChartConfig";
-              metadata = {
-                name = "tofu-controller";
-                namespace = "kube-system";
-              };
-              spec.valuesContent = builtins.toJSON cfg.flux.tofu.extraConfig;
-            };
-            extraFieldDefinitions.failurePolicy = "abort";
-            hash = cfg.flux.tofu.hash;
-            name = "tofu-controller";
-            repo = "https://flux-iac.github.io/tofu-controller";
-            targetNamespace = "flux-system";
-            values = {
-              awsPackage.install = false;
-              runner.allowedNamespaces = [
-                "flux-system"
-                "shikanime"
-              ];
-            };
-            version = cfg.flux.tofu.version;
-          };
-        });
+        } cfg.addons.flux.operator.extraConfig;
+      };
+
+      "tofu-controller" = {
+        createNamespace = true;
+        extraFieldDefinitions.failurePolicy = "abort";
+        hash = "sha256-YQRWHQwNn+Du9LNcveCBzTnacRDtWNJHwvXxeIxtKcc=";
+        name = "tofu-controller";
+        repo = "https://flux-iac.github.io/tofu-controller";
+        targetNamespace = "flux-system";
+        version = "0.16.2";
+        values = recursiveUpdate {
+          awsPackage.install = false;
+          runner.serviceAccount.allowedNamespaces = [
+            "flux-system"
+            "shikanime"
+          ];
+        } cfg.addons.flux.tofu.extraConfig;
+      };
     };
 
     systemd.services.rke2-flux-sops-age = {
