@@ -15,8 +15,6 @@ let
   ];
 in
 {
-  description = "Knix RKE2 deployment";
-
   config = mkIf cfg.enable {
     boot.kernelModules = [
       "br_netfilter"
