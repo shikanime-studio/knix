@@ -21,5 +21,6 @@
 - Keep a thin `modules/default.nix` aggregator that imports the submodules
 - Keep root options in `modules/knix.nix`
 - Keep RKE2 deployment config in `modules/rke2.nix`
-- Keep each concern in its own file under `modules/`
+- Keep each concern in its own file under `modules/`, such as `flux.nix`,
+  `longhorn.nix`, and `monitoring.nix`
 - Follow the Catppuccin pattern: `nixosModules.default = import ./modules`

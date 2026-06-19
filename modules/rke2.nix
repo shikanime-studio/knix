@@ -13,10 +13,23 @@ let
     cfg.clusterCidr
     cfg.clusterCidrIPv6
   ];
+
+  rke2ApiServerPort = 6443;
+  rke2SupervisorPort = 9345;
+  kubeletMetricsPort = 10250;
+  etcdClientPort = 2379;
+  etcdPeerPort = 2380;
+  etcdMetricsPort = 2381;
+  canalHealthCheckPort = 9099;
+  wireguardPort = 51820;
+  wireguardIPv6Port = 51821;
+
+  nodePortRange = {
+    from = 30000;
+    to = 32767;
+  };
 in
 {
-  description = "Knix RKE2 deployment";
-
   config = mkIf cfg.enable {
     boot.kernelModules = [
       "br_netfilter"
@@ -62,105 +75,108 @@ in
       "vm.max_map_count" = 262144;
     };
 
-    services.rke2 = {
-      enable = true;
-      inherit (cfg) role;
-      cisHardening = true;
-      manifests = {
-        rke2-canal-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-canal";
-            namespace = "kube-system";
+    services.rke2 = mkMerge [
+      {
+        enable = true;
+        inherit (cfg) role;
+        cisHardening = true;
+        manifests = {
+          rke2-canal-config.content = {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "rke2-canal";
+              namespace = "kube-system";
+            };
+            spec.valuesContent = builtins.toJSON {
+              flannel = {
+                backend = "wireguard";
+                iface = cfg.interface;
+              };
+              encryption = {
+                enabled = true;
+                type = "wireguard";
+              };
+              gatewayAPI = {
+                enabled = true;
+                gatewayClass.create = true;
+              };
+              hubble = {
+                enabled = true;
+                relay.enabled = true;
+                ui.enabled = true;
+              };
+              ipam.mode = "kubernetes";
+              k8s = {
+                requireIPv4PodCIDR = cfg.clusterCidr != null;
+                requireIPv6PodCIDR = cfg.clusterCidrIPv6 != null;
+              };
+              k8sServiceHost = "localhost";
+              k8sServicePort = "6443";
+              kubeProxyReplacement = true;
+              operator.prometheus.enabled = true;
+              prometheus.enabled = true;
+            };
           };
-          spec.valuesContent = builtins.toJSON {
-            flannel = {
-              backend = "wireguard";
-              iface = cfg.interface;
-            };
-            encryption = {
-              enabled = true;
-              type = "wireguard";
-            };
-            gatewayAPI = {
-              enabled = true;
-              gatewayClass.create = true;
-            };
-            hubble = {
-              enabled = true;
-              relay.enabled = true;
-              ui.enabled = true;
-            };
-            ipam.mode = "kubernetes";
-            k8s = {
-              requireIPv4PodCIDR = cfg.clusterCidr != null;
-              requireIPv6PodCIDR = cfg.clusterCidrIPv6 != null;
-            };
-            k8sServiceHost = "localhost";
-            k8sServicePort = "6443";
-            kubeProxyReplacement = true;
-            operator.prometheus.enabled = true;
-            prometheus.enabled = true;
-          };
-        };
 
-        rke2-coredns-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-coredns";
-            namespace = "kube-system";
+          rke2-coredns-config.content = {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "rke2-coredns";
+              namespace = "kube-system";
+            };
+            spec.valuesContent = builtins.toJSON {
+              nodelocal.enabled = true;
+            };
           };
-          spec.valuesContent = builtins.toJSON {
-            nodelocal.enabled = true;
-          };
-        };
 
-        rke2-multus-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-multus";
-            namespace = "kube-system";
+          rke2-multus-config.content = {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "rke2-multus";
+              namespace = "kube-system";
+            };
+            spec.valuesContent = builtins.toJSON {
+              manifests.dhcpDaemonSet = true;
+            };
           };
-          spec.valuesContent = builtins.toJSON {
-            manifests.dhcpDaemonSet = true;
-          };
-        };
 
-        rke2-traefik-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-traefik";
-            namespace = "kube-system";
-          };
-          spec.valuesContent = builtins.toJSON {
-            providers.kubernetesGateway.enabled = true;
+          rke2-traefik-config.content = {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "rke2-traefik";
+              namespace = "kube-system";
+            };
+            spec.valuesContent = builtins.toJSON {
+              providers.kubernetesGateway.enabled = true;
+            };
           };
         };
-      };
-      extraFlags = [
-        (optionalString (clusterCidr != [ ]) "--cluster-cidr=${concatStringsSep "," clusterCidr}")
-        "--cni=multus,canal"
-        "--ingress-controller=traefik"
-        "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
-        "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
-        (optionalString (cfg.serviceCidr != null) "--service-cidr=${cfg.serviceCidr}")
-        "--secrets-encryption"
-      ];
-      gracefulNodeShutdown.enable = true;
-    }
-    // optionalAttrs (cfg.nodeIP != null) {
-      inherit (cfg) nodeIP;
-    }
-    // optionalAttrs (cfg.serverAddr != null) {
-      inherit (cfg) serverAddr;
-    }
-    // optionalAttrs (cfg.tokenFile != null) {
-      inherit (cfg) tokenFile;
-    };
+        extraFlags = [
+          (optionalString (clusterCidr != [ ]) "--cluster-cidr=${concatStringsSep "," clusterCidr}")
+          "--cni=multus,canal"
+          "--ingress-controller=traefik"
+          "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
+          "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
+          (optionalString (cfg.serviceCidr != null) "--service-cidr=${cfg.serviceCidr}")
+          "--secrets-encryption"
+        ];
+        gracefulNodeShutdown.enable = true;
+      }
+      (optionalAttrs (cfg.nodeIP != null) {
+        inherit (cfg) nodeIP;
+      })
+      (optionalAttrs (cfg.serverAddr != null) {
+        inherit (cfg) serverAddr;
+      })
+      (optionalAttrs (cfg.tokenFile != null) {
+        inherit (cfg) tokenFile;
+      })
+      cfg.extraConfig
+    ];
 
     networking.firewall = {
       extraCommands = ''
@@ -181,24 +197,19 @@ in
       '';
       interfaces.${cfg.interface} = {
         allowedTCPPorts = [
-          6443
-          9345
-          10250
-          2379
-          2380
-          2381
-          9099
+          rke2ApiServerPort
+          rke2SupervisorPort
+          kubeletMetricsPort
+          etcdClientPort
+          etcdPeerPort
+          etcdMetricsPort
+          canalHealthCheckPort
         ];
         allowedUDPPorts = [
-          51820
-          51821
+          wireguardPort
+          wireguardIPv6Port
         ];
-        allowedTCPPortRanges = [
-          {
-            from = 30000;
-            to = 32767;
-          }
-        ];
+        allowedTCPPortRanges = [ nodePortRange ];
       };
     };
   };
