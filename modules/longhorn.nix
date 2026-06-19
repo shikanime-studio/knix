@@ -170,47 +170,5 @@ with lib;
           --overwrite
       '';
     };
-
-    services.rke2.manifests.longhorn.content = {
-      apiVersion = "helm.cattle.io/v1";
-      kind = "HelmChart";
-      metadata = {
-        name = "longhorn";
-        namespace = "kube-system";
-      };
-      spec = {
-        chart = "longhorn";
-        createNamespace = true;
-        failurePolicy = "abort";
-        releaseName = "longhorn";
-        targetNamespace = "longhorn-system";
-        inherit (cfg) version;
-        repo = "https://charts.longhorn.io";
-        valuesContent = builtins.toJSON (
-          recursiveUpdate {
-            defaultSettings = {
-              allowCollectingLonghornUsageMetrics = false;
-              defaultDataLocality = "best-effort";
-              defaultReplicaCount = 2;
-              replicaAutoBalance = "best-effort";
-              restoreVolumeRecurringJob = true;
-            };
-            persistence = {
-              defaultClassReplicaCount = 2;
-              defaultFsType = "xfs";
-              recurringJobSelector = {
-                enable = true;
-                jobList = [
-                  {
-                    name = "standard";
-                    isGroup = true;
-                  }
-                ];
-              };
-            };
-          } cfg.extraConfig
-        );
-      };
-    };
   };
 }
