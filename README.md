@@ -10,6 +10,7 @@ enough to understand and customize.
 - Pod and service networking defaults that work well with IPv4 and IPv6
 - Optional Flux CD integration for GitOps
 - Optional Longhorn deployment for persistent storage
+- Optional VictoriaMetrics-based monitoring with Grafana
 - A small option surface under `knix.*`
 
 ## Quick Start
@@ -187,6 +188,23 @@ Enable Flux when you want the cluster to reconcile itself from a Git repository:
 }
 ```
 
+## Monitoring
+
+Enable monitoring when you want a preconfigured VictoriaMetrics stack with
+Grafana:
+
+```nix
+{
+  knix = {
+    enable = true;
+    monitoring = {
+      enable = true;
+      grafanaHost = "nishir-grafana";
+    };
+  };
+}
+```
+
 ## Longhorn
 
 Enable Longhorn when you want persistent storage managed by the cluster:
@@ -242,6 +260,15 @@ All options live under `knix.*`.
 
 Longhorn also keeps the existing disk helper used by the cluster layout.
 
+### Monitoring
+
+| Option                             | Default    | Purpose                                     |
+| ---------------------------------- | ---------- | ------------------------------------------- |
+| `knix.monitoring.enable`           | `false`    | Enable the monitoring stack                 |
+| `knix.monitoring.version`          | `"0.82.0"` | VictoriaMetrics stack chart version         |
+| `knix.monitoring.storageClassName` | `null`     | Storage class for Grafana and vmsingle PVCs |
+| `knix.monitoring.grafanaHost`      | `null`     | Grafana hostname exposed through tailscale  |
+
 ## How It Is Structured
 
 ```text
@@ -249,7 +276,8 @@ knix.nixosModules.default   # Main entry point
 ├── modules/knix.nix        # Public option surface
 ├── modules/rke2.nix        # RKE2 server and cluster defaults
 ├── modules/flux.nix        # Flux CD integration
-└── modules/longhorn.nix    # Longhorn helper + HelmChart deployment
+├── modules/longhorn.nix    # Longhorn helper + HelmChart deployment
+└── modules/monitoring.nix  # VictoriaMetrics monitoring stack
 ```
 
 ## Notes
@@ -257,6 +285,7 @@ knix.nixosModules.default   # Main entry point
 - `knix.enable = true` is the main switch.
 - You can enable Flux and Longhorn independently.
 - Monitoring can be enabled on its own as well.
+- The module is opinionated by design, but the public knobs stay small.
 
 ## License
 
