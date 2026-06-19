@@ -64,7 +64,7 @@ in
 
     services.rke2 = {
       enable = true;
-      role = "server";
+      inherit (cfg) role;
       cisHardening = true;
       manifests = {
         rke2-canal-config.content = {

@@ -1,12 +1,12 @@
 # Knix
 
-Knix is the Nix module set I use to bring up an RKE2 cluster with a sensible
-default setup. It gives you a ready-to-use base for Kubernetes on NixOS, while
-still leaving room to tweak networking, Flux, and storage.
+Knix is an opinionated NixOS module set for bootstrapping an RKE2 cluster. It
+gives you a solid default cluster layout, while keeping the public surface small
+enough to understand and customize.
 
 ## What You Get
 
-- An RKE2 server with the defaults I rely on
+- An RKE2 server with the project defaults
 - Pod and service networking defaults that work well with IPv4 and IPv6
 - Optional Flux CD integration for GitOps
 - Optional Longhorn deployment for persistent storage
@@ -35,6 +35,123 @@ Add Knix as a flake input:
 ```
 
 That is enough to get the default RKE2 stack.
+
+## Topologies
+
+Knix supports three cluster layouts. Pick the one that matches your hardware.
+
+### Single Node
+
+The simplest setup. One machine acts as both server and worker. Good for
+homelabs, CI runners, or small production workloads that do not need HA.
+
+```nix
+{
+  inputs.knix.url = "github:shikanime-studio/knix";
+
+  outputs = { self, nixpkgs, knix, ... }:
+    {
+      nixosConfigurations.node1 = nixpkgs.lib.nixosSystem {
+        modules = [
+          knix.nixosModules.default
+          {
+            knix.enable = true;
+            networking.hostName = "node1";
+          }
+        ];
+      };
+    };
+}
+```
+
+The server role is enabled by default in `knix.role`. The single node runs the
+control plane, schedules workloads, and serves as the cluster API endpoint at
+`https://<nodeIP>:9345`.
+
+### Multi-Server HA
+
+Three or five machines share the control plane. RKE2 forms an etcd quorum across
+them, so the cluster survives the loss of one or two servers.
+
+Generate a shared token first:
+
+```sh
+openssl rand -hex 32 > rke2-token
+```
+
+Store it with sops-nix as `rke2-token`, then reference the decrypted path from
+each server configuration.
+
+```nix
+# server-1.nix
+{
+  nixosConfigurations.server1 = nixpkgs.lib.nixosSystem {
+    modules = [
+      knix.nixosModules.default
+      {
+        knix = {
+          enable = true;
+          serverAddr = "https://server1.example.com:9345";
+          tokenFile = config.sops.secrets.rke2-token.path;
+          nodeIP = "10.0.0.11";
+        };
+      }
+    ];
+  };
+}
+```
+
+Repeat for `server2` and `server3` with their own `nodeIP` values. All three
+share the same `serverAddr` and `tokenFile`. The first server to start
+initializes etcd; the remaining two join as voters.
+
+For five-node quorum, add two more servers. RKE2 tolerates two failures with
+five voters.
+
+### Worker-Only Nodes
+
+Workers join an existing cluster. They do not run the control plane or etcd. Use
+them to add compute capacity without expanding the server pool.
+
+```nix
+# worker-1.nix
+{
+  nixosConfigurations.worker1 = nixpkgs.lib.nixosSystem {
+    modules = [
+      knix.nixosModules.default
+      {
+        knix = {
+          enable = true;
+          serverAddr = "https://server1.example.com:9345";
+          tokenFile = config.sops.secrets.rke2-token.path;
+          nodeIP = "10.0.0.21";
+          role = "agent";
+        };
+      }
+    ];
+  };
+}
+```
+
+Workers use the same token as the servers but rely on `serverAddr` to find the
+cluster. Set `knix.role = "agent"` on worker-only nodes so RKE2 joins the
+existing server pool instead of initializing another control plane.
+
+### Mixed Layout
+
+In practice, most deployments combine topologies. A common pattern is three
+server nodes for HA plus two or more workers for capacity:
+
+```text
+server1 (control plane + etcd voter) ─┐
+server2 (control plane + etcd voter) ─┤── cluster API: https://vip:9345
+server3 (control plane + etcd voter) ─┘
+worker1 (workload only) ──────────────┘
+worker2 (workload only) ──────────────┘
+```
+
+Use a virtual IP or DNS round-robin for `serverAddr` so that new workers and API
+consumers reach a healthy server.
 
 ## Common Settings
 
@@ -99,6 +216,7 @@ All options live under `knix.*`.
 | `knix.nodeIP`               | `null`                      | Node IPs passed to RKE2                  |
 | `knix.serverAddr`           | `null`                      | RKE2 server address                      |
 | `knix.tokenFile`            | `null`                      | RKE2 join token file                     |
+| `knix.role`                 | `"server"`                  | RKE2 node role: `"server"` or `"agent"`  |
 | `knix.nodeCidrMaskSize`     | `24`                        | IPv4 node CIDR mask size                 |
 | `knix.nodeCidrMaskSizeIPv6` | `112`                       | IPv6 node CIDR mask size                 |
 
@@ -122,7 +240,7 @@ All options live under `knix.*`.
 | `knix.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
 | `knix.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
 
-Longhorn also keeps the existing disk helper used by my cluster setup.
+Longhorn also keeps the existing disk helper used by the cluster layout.
 
 ## How It Is Structured
 
@@ -138,7 +256,7 @@ knix.nixosModules.default   # Main entry point
 
 - `knix.enable = true` is the main switch.
 - You can enable Flux and Longhorn independently.
-- The module is opinionated by design.
+- Monitoring can be enabled on its own as well.
 
 ## License
 

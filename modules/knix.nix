@@ -9,6 +9,15 @@ with lib;
   options.knix = {
     enable = mkEnableOption "Knix opinionated RKE2 server";
 
+    role = mkOption {
+      type = types.enum [
+        "agent"
+        "server"
+      ];
+      default = "server";
+      description = "The RKE2 node role.";
+    };
+
     clusterCidr = mkOption {
       type = types.nullOr types.str;
       default = "10.244.0.0/16";
