@@ -180,9 +180,16 @@ Enable Flux when you want the cluster to reconcile itself from a Git repository:
 {
   knix = {
     enable = true;
-    flux.enable = true;
-    flux.repoUrl = "https://github.com/my-org/cluster-config.git";
-    flux.path = "clusters/production";
+    addons.flux.instance.extraConfig = {
+      instance.sync = {
+        interval = "1m";
+        kind = "GitRepository";
+        path = "clusters/production";
+        pullSecret = "";
+        ref = "refs/heads/main";
+        url = "https://github.com/my-org/cluster-config.git";
+      };
+    };
   };
 }
 ```
@@ -195,7 +202,7 @@ Enable Longhorn when you want persistent storage managed by the cluster:
 {
   knix = {
     enable = true;
-    longhorn.enable = true;
+    addons.longhorn.enable = true;
   };
 }
 ```
@@ -222,23 +229,23 @@ All options live under `knix.*`.
 
 ### Flux CD
 
-| Option                       | Default                                        | Purpose                       |
-| ---------------------------- | ---------------------------------------------- | ----------------------------- |
-| `knix.flux.enable`           | `false`                                        | Enable Flux CD                |
-| `knix.flux.repoUrl`          | `"https://github.com/shikanime/manifests.git"` | Git repository used by Flux   |
-| `knix.flux.path`             | `"clusters/nishir/overlays/tailnet"`           | Kustomization path            |
-| `knix.flux.ref`              | `"refs/heads/main"`                            | Git ref to track              |
-| `knix.flux.instance.version` | `"0.46.0"`                                     | Flux instance chart version   |
-| `knix.flux.operator.version` | `"0.46.0"`                                     | Flux operator chart version   |
-| `knix.flux.tofu.version`     | `"0.16.2"`                                     | tofu-controller chart version |
+| Option                                  | Default    | Purpose                       |
+| --------------------------------------- | ---------- | ----------------------------- |
+| `knix.addons.flux.enable`               | `true`     | Enable Flux CD                |
+| `knix.charts.flux.version`              | `"0.46.0"` | Flux instance chart version   |
+| `knix.charts."flux-operator".version`   | `"0.46.0"` | Flux operator chart version   |
+| `knix.charts."tofu-controller".version` | `"0.16.2"` | tofu-controller chart version |
+
+Flux instance sync is passed through
+`knix.addons.flux.instance.extraConfig.instance.sync`.
 
 ### Longhorn
 
-| Option                      | Default    | Purpose                                      |
-| --------------------------- | ---------- | -------------------------------------------- |
-| `knix.longhorn.enable`      | `false`    | Enable Longhorn                              |
-| `knix.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
-| `knix.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
+| Option                             | Default    | Purpose                                      |
+| ---------------------------------- | ---------- | -------------------------------------------- |
+| `knix.addons.longhorn.enable`      | `true`     | Enable Longhorn                              |
+| `knix.charts.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
+| `knix.addons.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
 
 Longhorn also keeps the existing disk helper used by the cluster layout.
 
@@ -246,10 +253,10 @@ Longhorn also keeps the existing disk helper used by the cluster layout.
 
 ```text
 knix.nixosModules.default   # Main entry point
-├── modules/knix.nix        # Public option surface
-├── modules/rke2.nix        # RKE2 server and cluster defaults
-├── modules/flux.nix        # Flux CD integration
-└── modules/longhorn.nix    # Longhorn helper + HelmChart deployment
+├── modules/knix.nix        # Public option surface + addon presets
+├── modules/rke2.nix        # RKE2 renderer for charts and manifests
+├── modules/flux.nix        # Flux CD preset
+└── modules/longhorn.nix    # Longhorn preset + host helper
 ```
 
 ## Notes

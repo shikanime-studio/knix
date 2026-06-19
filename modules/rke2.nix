@@ -8,11 +8,6 @@ with lib;
 
 let
   cfg = config.knix;
-
-  clusterCidr = filter (cidr: cidr != null) [
-    cfg.clusterCidr
-    cfg.clusterCidrIPv6
-  ];
 in
 {
   config = mkIf cfg.enable {
@@ -64,100 +59,36 @@ in
       enable = true;
       inherit (cfg) role;
       cisHardening = true;
-      manifests = {
-        rke2-canal-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-canal";
-            namespace = "kube-system";
-          };
-          spec.valuesContent = builtins.toJSON {
-            flannel = {
-              backend = "wireguard";
-              iface = cfg.interface;
-            };
-            encryption = {
-              enabled = true;
-              type = "wireguard";
-            };
-            gatewayAPI = {
-              enabled = true;
-              gatewayClass.create = true;
-            };
-            hubble = {
-              enabled = true;
-              relay.enabled = true;
-              ui.enabled = true;
-            };
-            ipam.mode = "kubernetes";
-            k8s = {
-              requireIPv4PodCIDR = cfg.clusterCidr != null;
-              requireIPv6PodCIDR = cfg.clusterCidrIPv6 != null;
-            };
-            k8sServiceHost = "localhost";
-            k8sServicePort = "6443";
-            kubeProxyReplacement = true;
-            operator.prometheus.enabled = true;
-            prometheus.enabled = true;
-          };
-        };
-
-        rke2-coredns-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-coredns";
-            namespace = "kube-system";
-          };
-          spec.valuesContent = builtins.toJSON {
-            nodelocal.enabled = true;
-          };
-        };
-
-        rke2-multus-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-multus";
-            namespace = "kube-system";
-          };
-          spec.valuesContent = builtins.toJSON {
-            manifests.dhcpDaemonSet = true;
-          };
-        };
-
-        rke2-traefik-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-traefik";
-            namespace = "kube-system";
-          };
-          spec.valuesContent = builtins.toJSON {
-            providers.kubernetesGateway.enabled = true;
-          };
-        };
-      };
+      autoDeployCharts = cfg.charts;
+      inherit (cfg) manifests;
       extraFlags = [
-        (optionalString (clusterCidr != [ ]) "--cluster-cidr=${concatStringsSep "," clusterCidr}")
+        "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
         "--cni=multus,canal"
         "--ingress-controller=traefik"
         "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
         "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
-        (optionalString (cfg.serviceCidr != null) "--service-cidr=${cfg.serviceCidr}")
+        "--service-cidr=${cfg.serviceCidr}"
         "--secrets-encryption"
       ];
       gracefulNodeShutdown.enable = true;
     }
-    // optionalAttrs (cfg.nodeIP != null) {
-      inherit (cfg) nodeIP;
-    }
-    // optionalAttrs (cfg.serverAddr != null) {
-      inherit (cfg) serverAddr;
-    }
-    // optionalAttrs (cfg.tokenFile != null) {
-      inherit (cfg) tokenFile;
+    // {
+      inherit (cfg) nodeIP serverAddr tokenFile;
+    };
+
+    knix.manifests.rke2-canal-config.content = {
+      apiVersion = "helm.cattle.io/v1";
+      kind = "HelmChartConfig";
+      metadata = {
+        name = "rke2-canal";
+        namespace = "kube-system";
+      };
+      spec.valuesContent = builtins.toJSON {
+        flannel = {
+          backend = "wireguard";
+          iface = cfg.interface;
+        };
+      };
     };
 
     networking.firewall = {
