@@ -71,11 +71,5 @@ with lib;
       default = null;
       description = "The token file passed to RKE2.";
     };
-
-    extraConfig = mkOption {
-      type = types.attrsOf types.raw;
-      default = { };
-      description = "Additional direct values merged into services.rke2.";
-    };
   };
 }
