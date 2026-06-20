@@ -51,6 +51,12 @@ with lib;
       description = "The WAN interface used for firewall policy.";
     };
 
+    labels = mkOption {
+      type = types.attrsOf types.str;
+      default = { };
+      description = "The node labels applied to RKE2 nodes.";
+    };
+
     nodeIP = mkOption {
       type = types.str;
       description = "The node IPs passed to RKE2.";

@@ -59,6 +59,9 @@ in
       enable = true;
       inherit (cfg) role;
       cisHardening = true;
+      nodeLabel = concatStringsSep "," (
+        mapAttrsToList (name: value: "${name}=${value}") cfg.labels
+      );
       autoDeployCharts = cfg.charts;
       inherit (cfg) manifests;
       extraFlags = [

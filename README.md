@@ -203,9 +203,15 @@ Enable Longhorn when you want persistent storage managed by the cluster:
   knix = {
     enable = true;
     addons.longhorn.enable = true;
+    labels = {
+      "node.longhorn.io/create-default-disk" = "config";
+    };
   };
 }
 ```
+
+Longhorn enables the `node.longhorn.io/create-default-disk=config` label for
+`knix.labels` automatically.
 
 ## Options
 
@@ -220,6 +226,7 @@ All options live under `knix.*`.
 | `knix.clusterCidrIPv6`      | `"fd00::/108"`              | IPv6 pod CIDR                            |
 | `knix.serviceCidr`          | `"10.96.0.0/12,fd01::/108"` | Service CIDR                             |
 | `knix.interface`            | `"enp1s0"`                  | WAN interface used by the firewall rules |
+| `knix.labels`               | `{}`                        | Optional node labels passed to RKE2      |
 | `knix.nodeIP`               | `null`                      | Node IPs passed to RKE2                  |
 | `knix.serverAddr`           | `null`                      | RKE2 server address                      |
 | `knix.tokenFile`            | `null`                      | RKE2 join token file                     |

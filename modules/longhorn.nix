@@ -43,36 +43,41 @@ with lib;
   };
 
   config = mkIf cfg.addons.longhorn.enable {
-    knix.charts.longhorn = {
-      createNamespace = true;
-      extraFieldDefinitions.failurePolicy = "abort";
-      hash = "sha256-qHHTl+Gc8yQ5SavUH9KUhp9cLEkAFPKecYZqJDPsf7k=";
-      name = "longhorn";
-      repo = "https://charts.longhorn.io";
-      targetNamespace = "longhorn-system";
-      version = "1.12.0";
-      values = recursiveUpdate {
-        defaultSettings = {
-          allowCollectingLonghornUsageMetrics = false;
-          defaultDataLocality = "best-effort";
-          defaultReplicaCount = 2;
-          replicaAutoBalance = "best-effort";
-          restoreVolumeRecurringJob = true;
-        };
-        persistence = {
-          defaultClassReplicaCount = 2;
-          defaultFsType = "xfs";
-          recurringJobSelector = {
-            enable = true;
-            jobList = [
-              {
-                name = "standard";
-                isGroup = true;
-              }
-            ];
+    knix = {
+      charts.longhorn = {
+        createNamespace = true;
+        extraFieldDefinitions.failurePolicy = "abort";
+        hash = "sha256-qHHTl+Gc8yQ5SavUH9KUhp9cLEkAFPKecYZqJDPsf7k=";
+        name = "longhorn";
+        repo = "https://charts.longhorn.io";
+        targetNamespace = "longhorn-system";
+        version = "1.12.0";
+        values = recursiveUpdate {
+          defaultSettings = {
+            allowCollectingLonghornUsageMetrics = false;
+            defaultDataLocality = "best-effort";
+            defaultReplicaCount = 2;
+            replicaAutoBalance = "best-effort";
+            restoreVolumeRecurringJob = true;
           };
-        };
-      } cfg.addons.longhorn.extraConfig;
+          persistence = {
+            defaultClassReplicaCount = 2;
+            defaultFsType = "xfs";
+            recurringJobSelector = {
+              enable = true;
+              jobList = [
+                {
+                  name = "standard";
+                  isGroup = true;
+                }
+              ];
+            };
+          };
+        } cfg.addons.longhorn.extraConfig;
+      };
+      labels = {
+        "node.longhorn.io/create-default-disk" = "config";
+      };
     };
 
     boot.kernelModules = [
@@ -97,11 +102,6 @@ with lib;
     systemd.tmpfiles.rules = [
       "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
     ];
-
-    services.rke2.nodeLabel = [
-      "node.longhorn.io/create-default-disk=config"
-    ];
-
     systemd.services.rke2-longhorn-default-disks-config = {
       description = "Apply Longhorn default-disks-config annotation";
       wants = [ "rke2-server.service" ];
