@@ -75,6 +75,12 @@ with lib;
       description = "The token file passed to RKE2.";
     };
 
+    tlsSan = mkOption {
+      type = types.listOf types.str;
+      default = [ ];
+      description = "The TLS SANs passed to RKE2.";
+    };
+
     charts = mkOption {
       type = types.attrsOf (
         types.submodule {
