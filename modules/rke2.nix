@@ -125,8 +125,8 @@ in
         "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
         "--service-cidr=${cfg.serviceCidr}"
         "--secrets-encryption"
-        "--tls-san=nishir.taila659a.ts.net"
-      ];
+      ]
+      ++ optional (cfg.tlsSan != [ ]) "--tls-san=${concatStringsSep "," cfg.tlsSan}";
       gracefulNodeShutdown.enable = true;
     }
     // {
