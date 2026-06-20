@@ -54,6 +54,7 @@ with lib;
         version = "0.46.0";
         values = recursiveUpdate {
           instance = {
+            cluster.networkPolicy = true;
             distribution = {
               registry = "ghcr.io/fluxcd";
               version = "2.x";
@@ -84,12 +85,15 @@ with lib;
         targetNamespace = "flux-system";
         version = "0.46.0";
         values = recursiveUpdate {
-          web.config.authentication = {
-            anonymous = {
-              groups = [ "system:masters" ];
-              username = "admin";
+          web = {
+            networkPolicy.create = true;
+            config.authentication = {
+              anonymous = {
+                groups = [ "system:masters" ];
+                username = "admin";
+              };
+              type = "Anonymous";
             };
-            type = "Anonymous";
           };
         } cfg.addons.flux.operator.extraConfig;
       };
