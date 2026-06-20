@@ -68,6 +68,11 @@ The server role is enabled by default in `knix.role`. The single node runs the
 control plane, schedules workloads, and serves as the cluster API endpoint at
 `https://<nodeIP>:9345`.
 
+Under the hood, Knix also enables the host tuning RKE2 and Longhorn need: bridge
+netfilter and overlayfs support, BBR congestion control, tighter neighbor-table
+and conntrack limits, and IPv4/IPv6 forwarding defaults that match the cluster
+networking model.
+
 ### Multi-Server HA
 
 Three or five machines share the control plane. RKE2 forms an etcd quorum across
