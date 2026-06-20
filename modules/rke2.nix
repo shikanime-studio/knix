@@ -98,11 +98,10 @@ in
 
     services.rke2 = {
       enable = true;
-      inherit (cfg) role;
+      inherit (cfg) manifests role;
       cisHardening = true;
-      nodeLabel = concatStringsSep "," (mapAttrsToList (name: value: "${name}=${value}") cfg.labels);
+      nodeLabel = mapAttrsToList (name: value: "${name}=${value}") cfg.labels;
       autoDeployCharts = cfg.charts;
-      inherit (cfg) manifests;
       extraFlags = [
         "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
         "--cni=multus,canal"
