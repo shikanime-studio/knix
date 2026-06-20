@@ -47,7 +47,7 @@ with lib;
       charts.longhorn = {
         createNamespace = true;
         extraFieldDefinitions.failurePolicy = "abort";
-        hash = "sha256-qHHTl+Gc8yQ5SavUH9KUhp9cLEkAFPKecYZqJDPsf7k=";
+        hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
         name = "longhorn";
         repo = "https://charts.longhorn.io";
         targetNamespace = "longhorn-system";
