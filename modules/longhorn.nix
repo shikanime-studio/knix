@@ -63,15 +63,6 @@ with lib;
           persistence = {
             defaultClassReplicaCount = 2;
             defaultFsType = "xfs";
-            recurringJobSelector = {
-              enable = true;
-              jobList = [
-                {
-                  name = "standard";
-                  isGroup = true;
-                }
-              ];
-            };
           };
         } cfg.addons.longhorn.extraConfig;
       };
