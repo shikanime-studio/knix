@@ -31,10 +31,10 @@ with lib;
           description = "The mount root scanned for additional Longhorn disks.";
         };
 
-        storageReservedPercent = mkOption {
+        storageReservedPercentageForDefaultDisk = mkOption {
           type = types.int;
           default = 30;
-          description = "The percentage of disk space reserved on additional Longhorn disks.";
+          description = "The percentage of disk space reserved on the default /var/lib/longhorn/ disk.";
         };
       };
     };
@@ -101,7 +101,7 @@ with lib;
       environment = {
         KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
         MOUNT_ROOT = cfg.addons.longhorn.mountRoot;
-        STORAGE_RESERVED_PERCENT = toString cfg.addons.longhorn.storageReservedPercent;
+        STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK = toString cfg.addons.longhorn.storageReservedPercentageForDefaultDisk;
       };
       serviceConfig.Type = "oneshot";
       preStart = ''
@@ -128,9 +128,9 @@ with lib;
             if [ -z "$rotational" ]; then
               return 1
             elif [ "$rotational" = "1" ]; then
-              printf '%s\n' '["hdd"]'
+              printf '%s\n' '["nearline"]'
             else
-              printf '%s\n' '["ssd"]'
+              printf '%s\n' '["standard"]'
             fi
           }
 
@@ -144,9 +144,29 @@ with lib;
             printf '%s\n' "$((size * storage_reserved_percent / 100))"
           }
 
-          disk_config_entry() {
+          default_disk_config_entry() {
             mount_path="$1"
             storage_reserved_percent="$2"
+
+            if ! ${pkgs.util-linux}/bin/mountpoint -q "$mount_path"; then
+              return
+            fi
+
+            longhorn_path="$mount_path/longhorn"
+            mkdir -p "$longhorn_path"
+
+            ${pkgs.jq}/bin/jq -nc \
+              --arg path "$longhorn_path/" \
+              --argjson storageReserved "$(storage_reserved "$mount_path" "$storage_reserved_percent")" \
+              '{
+                path: $path,
+                allowScheduling: true,
+                storageReserved: $storageReserved
+              }'
+          }
+
+          disk_config_entry() {
+            mount_path="$1"
 
             if ! ${pkgs.util-linux}/bin/mountpoint -q "$mount_path"; then
               return
@@ -163,24 +183,19 @@ with lib;
             ${pkgs.jq}/bin/jq -nc \
               --arg path "$longhorn_path/" \
               --argjson tags "$tags" \
-              --argjson storageReserved "$(storage_reserved "$mount_path" "$storage_reserved_percent")" \
               '{
                 path: $path,
                 allowScheduling: true,
-                storageReserved: $storageReserved,
                 tags: $tags
               }'
           }
 
           longhornDefaultDisksConfig="$(
             {
-              ${pkgs.jq}/bin/jq -nc '{
-                path: "/var/lib/longhorn/",
-                allowScheduling: true
-              }'
+              default_disk_config_entry "/var/lib/longhorn/" "$STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK"
               for mount_path in "''${MOUNT_ROOT}"/*; do
                 if [ -d "$mount_path" ]; then
-                  disk_config_entry "$mount_path" "$STORAGE_RESERVED_PERCENT"
+                  disk_config_entry "$mount_path"
                 fi
               done
             } | ${pkgs.jq}/bin/jq -sc '.'
