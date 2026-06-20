@@ -58,17 +58,20 @@ with lib;
     };
 
     nodeIP = mkOption {
-      type = types.str;
+      type = types.nullOr types.str;
+      default = null;
       description = "The node IPs passed to RKE2.";
     };
 
     serverAddr = mkOption {
       type = types.str;
+      default = "";
       description = "The server address passed to RKE2.";
     };
 
     tokenFile = mkOption {
-      type = types.path;
+      type = types.nullOr types.path;
+      default = null;
       description = "The token file passed to RKE2.";
     };
 
@@ -80,14 +83,6 @@ with lib;
               type = types.bool;
               default = true;
               description = "Whether the chart should create its namespace.";
-            };
-
-            extraFieldDefinitions = mkOption {
-              type = types.attrsOf types.raw;
-              default = {
-                failurePolicy = "abort";
-              };
-              description = "Extra chart field definitions passed through to RKE2.";
             };
 
             hash = mkOption {

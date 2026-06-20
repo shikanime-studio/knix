@@ -233,7 +233,7 @@ All options live under `knix.*`.
 | `knix.interface`            | `"enp1s0"`                  | WAN interface used by the firewall rules |
 | `knix.labels`               | `{}`                        | Optional node labels passed to RKE2      |
 | `knix.nodeIP`               | `null`                      | Node IPs passed to RKE2                  |
-| `knix.serverAddr`           | `null`                      | RKE2 server address                      |
+| `knix.serverAddr`           | `""`                        | RKE2 server address                      |
 | `knix.tokenFile`            | `null`                      | RKE2 join token file                     |
 | `knix.role`                 | `"server"`                  | RKE2 node role: `"server"` or `"agent"`  |
 | `knix.nodeCidrMaskSize`     | `24`                        | IPv4 node CIDR mask size                 |
