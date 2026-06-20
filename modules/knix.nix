@@ -85,10 +85,10 @@ with lib;
               description = "Whether the chart should create its namespace.";
             };
 
-            extraFieldDefinitions = mkOption {
-              type = types.attrsOf types.raw;
-              default = { };
-              description = "Extra chart field definitions passed through to RKE2.";
+            failurePolicy = mkOption {
+              type = types.nullOr types.str;
+              default = null;
+              description = "The chart failure policy passed through to RKE2.";
             };
 
             hash = mkOption {

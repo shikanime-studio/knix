@@ -46,7 +46,7 @@ with lib;
     knix = {
       charts.longhorn = {
         createNamespace = true;
-        extraFieldDefinitions.failurePolicy = "abort";
+        failurePolicy = "abort";
         hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
         name = "longhorn";
         repo = "https://charts.longhorn.io";

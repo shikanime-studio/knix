@@ -21,6 +21,21 @@ let
     from = 30000;
     to = 32767;
   };
+
+  mkAutoDeployChart =
+    chart:
+    let
+      baseChart = removeAttrs chart [ "failurePolicy" ];
+    in
+    if chart.failurePolicy == null then
+      baseChart
+    else
+      baseChart
+      // {
+        extraFieldDefinitions = (baseChart.extraFieldDefinitions or { }) // {
+          inherit (chart) failurePolicy;
+        };
+      };
 in
 {
   config = mkIf cfg.enable {
@@ -101,7 +116,7 @@ in
       inherit (cfg) manifests role;
       cisHardening = true;
       nodeLabel = mapAttrsToList (name: value: "${name}=${value}") cfg.labels;
-      autoDeployCharts = cfg.charts;
+      autoDeployCharts = mapAttrs (_: mkAutoDeployChart) cfg.charts;
       extraFlags = [
         "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
         "--cni=multus,canal"

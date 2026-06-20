@@ -46,7 +46,7 @@ with lib;
     knix.charts = {
       flux = {
         createNamespace = true;
-        extraFieldDefinitions.failurePolicy = "abort";
+        failurePolicy = "abort";
         hash = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
         name = "flux-instance";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance";
@@ -77,7 +77,7 @@ with lib;
 
       "flux-operator" = {
         createNamespace = true;
-        extraFieldDefinitions.failurePolicy = "abort";
+        failurePolicy = "abort";
         hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
         name = "flux-operator";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator";
@@ -96,7 +96,7 @@ with lib;
 
       "tofu-controller" = {
         createNamespace = true;
-        extraFieldDefinitions.failurePolicy = "abort";
+        failurePolicy = "abort";
         hash = "sha256-YQRWHQwNn+Du9LNcveCBzTnacRDtWNJHwvXxeIxtKcc=";
         name = "tofu-controller";
         repo = "https://flux-iac.github.io/tofu-controller";
