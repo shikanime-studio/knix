@@ -3,7 +3,7 @@
 with lib;
 
 {
-  options.knix = {
+  options.services.knix = {
     enable = mkEnableOption "Knix opinionated RKE2 server";
 
     role = mkOption {
