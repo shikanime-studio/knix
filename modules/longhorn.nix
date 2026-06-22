@@ -6,11 +6,11 @@
 }:
 
 let
-  cfg = config.knix;
+  cfg = config.services.knix;
 in
 with lib;
 {
-  options.knix.addons.longhorn = mkOption {
+  options.services.knix.addons.longhorn = mkOption {
     type = types.submodule {
       options = {
         enable = mkOption {
@@ -43,7 +43,7 @@ with lib;
   };
 
   config = mkIf cfg.addons.longhorn.enable {
-    knix = {
+    services.knix = {
       charts.longhorn = {
         createNamespace = true;
         failurePolicy = "abort";

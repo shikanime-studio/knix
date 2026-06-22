@@ -6,11 +6,11 @@
 }:
 
 let
-  cfg = config.knix;
+  cfg = config.services.knix;
 in
 with lib;
 {
-  options.knix.addons.flux = mkOption {
+  options.services.knix.addons.flux = mkOption {
     type = types.submodule {
       options = {
         enable = mkOption {
@@ -43,7 +43,7 @@ with lib;
   };
 
   config = mkIf cfg.addons.flux.enable {
-    knix.charts = {
+    services.knix.charts = {
       flux = {
         createNamespace = true;
         failurePolicy = "abort";
