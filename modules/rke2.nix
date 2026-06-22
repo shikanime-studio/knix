@@ -7,7 +7,7 @@
 with lib;
 
 let
-  cfg = config.knix;
+  cfg = config.services.knix;
   rke2ApiServerPort = 6443;
   rke2SupervisorPort = 9345;
   rke2KubeletPort = 10250;
@@ -133,7 +133,7 @@ in
       inherit (cfg) nodeIP serverAddr tokenFile;
     };
 
-    knix.manifests.rke2-canal-config.content = {
+    services.knix.manifests.rke2-canal-config.content = {
       apiVersion = "helm.cattle.io/v1";
       kind = "HelmChartConfig";
       metadata = {

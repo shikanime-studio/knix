@@ -17,7 +17,7 @@
 
 ## Module design
 
-- All options under `knix.*`
+- All options under `services.knix.*`
 - Keep a thin `modules/default.nix` aggregator that imports the submodules
 - Keep root options in `modules/knix.nix`
 - Keep RKE2 deployment config in `modules/rke2.nix`

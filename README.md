@@ -10,7 +10,7 @@ enough to understand and customize.
 - Pod and service networking defaults that work well with IPv4 and IPv6
 - Optional Flux CD integration for GitOps
 - Optional Longhorn deployment for persistent storage
-- A small option surface under `knix.*`
+- A small option surface under `services.knix.*`
 
 ## Quick Start
 
@@ -26,7 +26,7 @@ Add Knix as a flake input:
         modules = [
           knix.nixosModules.default
           {
-            knix.enable = true;
+            services.knix.enable = true;
           }
         ];
       };
@@ -55,7 +55,7 @@ homelabs, CI runners, or small production workloads that do not need HA.
         modules = [
           knix.nixosModules.default
           {
-            knix.enable = true;
+            services.knix.enable = true;
             networking.hostName = "node1";
           }
         ];
@@ -64,9 +64,9 @@ homelabs, CI runners, or small production workloads that do not need HA.
 }
 ```
 
-The server role is enabled by default in `knix.role`. The single node runs the
-control plane, schedules workloads, and serves as the cluster API endpoint at
-`https://<nodeIP>:9345`.
+The server role is enabled by default in `services.knix.role`. The single node
+runs the control plane, schedules workloads, and serves as the cluster API
+endpoint at `https://<nodeIP>:9345`.
 
 Under the hood, Knix also enables the host tuning RKE2 and Longhorn need: bridge
 netfilter and overlayfs support, BBR congestion control, tighter neighbor-table
@@ -94,7 +94,7 @@ each server configuration.
     modules = [
       knix.nixosModules.default
       {
-        knix = {
+        services.knix = {
           enable = true;
           serverAddr = "https://server1.example.com:9345";
           tokenFile = config.sops.secrets.rke2-token.path;
@@ -125,7 +125,7 @@ them to add compute capacity without expanding the server pool.
     modules = [
       knix.nixosModules.default
       {
-        knix = {
+        services.knix = {
           enable = true;
           serverAddr = "https://server1.example.com:9345";
           tokenFile = config.sops.secrets.rke2-token.path;
@@ -139,8 +139,8 @@ them to add compute capacity without expanding the server pool.
 ```
 
 Workers use the same token as the servers but rely on `serverAddr` to find the
-cluster. Set `knix.role = "agent"` on worker-only nodes so RKE2 joins the
-existing server pool instead of initializing another control plane.
+cluster. Set `services.knix.role = "agent"` on worker-only nodes so RKE2 joins
+the existing server pool instead of initializing another control plane.
 
 ### Mixed Layout
 
@@ -164,7 +164,7 @@ Use these when you want to adjust the cluster without rewriting the module:
 
 ```nix
 {
-  knix = {
+  services.knix = {
     enable = true;
     nodeIP = "192.168.1.30";
     serverAddr = "https://192.168.1.28:9345";
@@ -183,7 +183,7 @@ Enable Flux when you want the cluster to reconcile itself from a Git repository:
 
 ```nix
 {
-  knix = {
+  services.knix = {
     enable = true;
     addons.flux.instance.extraConfig = {
       instance.sync = {
@@ -205,7 +205,7 @@ Enable Longhorn when you want persistent storage managed by the cluster:
 
 ```nix
 {
-  knix = {
+  services.knix = {
     enable = true;
     addons.longhorn.enable = true;
     labels = {
@@ -216,49 +216,49 @@ Enable Longhorn when you want persistent storage managed by the cluster:
 ```
 
 Longhorn enables the `node.longhorn.io/create-default-disk=config` label for
-`knix.labels` automatically.
+`services.knix.labels` automatically.
 
 ## Options
 
-All options live under `knix.*`.
+All options live under `services.knix.*`.
 
 ### Core
 
-| Option                      | Default                     | Purpose                                  |
-| --------------------------- | --------------------------- | ---------------------------------------- |
-| `knix.enable`               | `false`                     | Turn the Knix module on                  |
-| `knix.clusterCidr`          | `"10.244.0.0/16"`           | IPv4 pod CIDR                            |
-| `knix.clusterCidrIPv6`      | `"fd00::/108"`              | IPv6 pod CIDR                            |
-| `knix.serviceCidr`          | `"10.96.0.0/12,fd01::/108"` | Service CIDR                             |
-| `knix.interface`            | `"enp1s0"`                  | WAN interface used by the firewall rules |
-| `knix.labels`               | `{}`                        | Optional node labels passed to RKE2      |
-| `knix.nodeIP`               | `null`                      | Node IPs passed to RKE2                  |
-| `knix.serverAddr`           | `""`                        | RKE2 server address                      |
-| `knix.tokenFile`            | `null`                      | RKE2 join token file                     |
-| `knix.tlsSan`               | `[]`                        | TLS SANs passed to RKE2                  |
-| `knix.role`                 | `"server"`                  | RKE2 node role: `"server"` or `"agent"`  |
-| `knix.nodeCidrMaskSize`     | `24`                        | IPv4 node CIDR mask size                 |
-| `knix.nodeCidrMaskSizeIPv6` | `112`                       | IPv6 node CIDR mask size                 |
+| Option                               | Default                     | Purpose                                  |
+| ------------------------------------ | --------------------------- | ---------------------------------------- |
+| `services.knix.enable`               | `false`                     | Turn the Knix module on                  |
+| `services.knix.clusterCidr`          | `"10.244.0.0/16"`           | IPv4 pod CIDR                            |
+| `services.knix.clusterCidrIPv6`      | `"fd00::/108"`              | IPv6 pod CIDR                            |
+| `services.knix.serviceCidr`          | `"10.96.0.0/12,fd01::/108"` | Service CIDR                             |
+| `services.knix.interface`            | `"enp1s0"`                  | WAN interface used by the firewall rules |
+| `services.knix.labels`               | `{}`                        | Optional node labels passed to RKE2      |
+| `services.knix.nodeIP`               | `null`                      | Node IPs passed to RKE2                  |
+| `services.knix.serverAddr`           | `""`                        | RKE2 server address                      |
+| `services.knix.tokenFile`            | `null`                      | RKE2 join token file                     |
+| `services.knix.tlsSan`               | `[]`                        | TLS SANs passed to RKE2                  |
+| `services.knix.role`                 | `"server"`                  | RKE2 node role: `"server"` or `"agent"`  |
+| `services.knix.nodeCidrMaskSize`     | `24`                        | IPv4 node CIDR mask size                 |
+| `services.knix.nodeCidrMaskSizeIPv6` | `112`                       | IPv6 node CIDR mask size                 |
 
 ### Flux CD
 
-| Option                                  | Default    | Purpose                       |
-| --------------------------------------- | ---------- | ----------------------------- |
-| `knix.addons.flux.enable`               | `true`     | Enable Flux CD                |
-| `knix.charts.flux.version`              | `"0.46.0"` | Flux instance chart version   |
-| `knix.charts."flux-operator".version`   | `"0.46.0"` | Flux operator chart version   |
-| `knix.charts."tofu-controller".version` | `"0.16.2"` | tofu-controller chart version |
+| Option                                           | Default    | Purpose                       |
+| ------------------------------------------------ | ---------- | ----------------------------- |
+| `services.knix.addons.flux.enable`               | `true`     | Enable Flux CD                |
+| `services.knix.charts.flux.version`              | `"0.46.0"` | Flux instance chart version   |
+| `services.knix.charts."flux-operator".version`   | `"0.46.0"` | Flux operator chart version   |
+| `services.knix.charts."tofu-controller".version` | `"0.16.2"` | tofu-controller chart version |
 
 Flux instance sync is passed through
-`knix.addons.flux.instance.extraConfig.instance.sync`.
+`services.knix.addons.flux.instance.extraConfig.instance.sync`.
 
 ### Longhorn
 
-| Option                             | Default    | Purpose                                      |
-| ---------------------------------- | ---------- | -------------------------------------------- |
-| `knix.addons.longhorn.enable`      | `true`     | Enable Longhorn                              |
-| `knix.charts.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
-| `knix.addons.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
+| Option                                      | Default    | Purpose                                      |
+| ------------------------------------------- | ---------- | -------------------------------------------- |
+| `services.knix.addons.longhorn.enable`      | `true`     | Enable Longhorn                              |
+| `services.knix.charts.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
+| `services.knix.addons.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
 
 Longhorn also keeps the existing disk helper used by the cluster layout.
 
@@ -274,7 +274,7 @@ knix.nixosModules.default   # Main entry point
 
 ## Notes
 
-- `knix.enable = true` is the main switch.
+- `services.knix.enable = true` is the main switch.
 - You can enable Flux and Longhorn independently.
 - Monitoring can be enabled on its own as well.
 
