@@ -60,7 +60,7 @@ with lib;
             replicaAutoBalance = "best-effort";
             restoreVolumeRecurringJob = true;
           };
-          persistence.defaultClass = false;
+          persistence.createStorageClass = false;
         } cfg.addons.longhorn.extraConfig;
       };
       labels = {
