@@ -69,7 +69,7 @@ with lib;
   config = mkIf cfg.addons.flux.enable {
     services.knix.charts = {
       flux = {
-        inherit (cfg.addons.flux) version;
+        inherit (cfg.addons.flux.instance) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
