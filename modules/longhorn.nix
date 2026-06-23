@@ -19,6 +19,12 @@ with lib;
           description = "Whether to enable the Longhorn addon.";
         };
 
+        version = mkOption {
+          type = types.str;
+          default = "1.12.0";
+          description = "Longhorn chart version.";
+        };
+
         extraConfig = mkOption {
           type = types.attrsOf types.raw;
           default = { };
@@ -51,7 +57,7 @@ with lib;
         name = "longhorn";
         repo = "https://charts.longhorn.io";
         targetNamespace = "longhorn-system";
-        version = "1.12.0";
+        version = cfg.addons.longhorn.version;
         values = recursiveUpdate {
           defaultSettings = {
             allowCollectingLonghornUsageMetrics = false;
