@@ -158,6 +158,7 @@ in
             namespace = "kube-system";
           };
           spec.valuesContent = builtins.toJSON {
+            gateway.enabled = false;
             ports = {
               web = {
                 port = 80;
