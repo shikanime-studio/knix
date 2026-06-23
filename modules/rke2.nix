@@ -133,58 +133,35 @@ in
       inherit (cfg) nodeIP serverAddr tokenFile;
     };
 
-    services.knix.manifests.rke2-canal-config.content = {
-      apiVersion = "helm.cattle.io/v1";
-      kind = "HelmChartConfig";
-      metadata = {
-        name = "rke2-canal";
-        namespace = "kube-system";
-      };
-      spec.valuesContent = builtins.toJSON {
-        flannel = {
-          backend = "wireguard";
-          iface = cfg.interface;
+    services.knix.manifests = {
+      rke2-canal-config.content = {
+        apiVersion = "helm.cattle.io/v1";
+        kind = "HelmChartConfig";
+        metadata = {
+          name = "rke2-canal";
+          namespace = "kube-system";
+        };
+        spec.valuesContent = builtins.toJSON {
+          flannel = {
+            backend = "wireguard";
+            iface = cfg.interface;
+          };
         };
       };
-    };
 
-    services.knix.manifests.rke2-traefik-config.content = {
-      apiVersion = "helm.cattle.io/v1";
-      kind = "HelmChartConfig";
-      metadata = {
-        name = "rke2-traefik";
-        namespace = "kube-system";
-      };
-      spec.valuesContent = builtins.toJSON {
-        ports = {
-          web = {
-            port = 80;
-            expose = {
-              default = true;
-            };
-            exposedPort = 80;
-            protocol = "TCP";
-          };
-          websecure = {
-            port = 443;
-            expose = {
-              default = true;
-            };
-            exposedPort = 443;
-            protocol = "TCP";
-            tls = {
-              enabled = true;
-            };
-          };
+      rke2-traefik-config.content = {
+        apiVersion = "helm.cattle.io/v1";
+        kind = "HelmChartConfig";
+        metadata = {
+          name = "rke2-traefik";
+          namespace = "kube-system";
         };
-        providers = {
-          kubernetesGateway = {
+        spec.valuesContent = builtins.toJSON {
+          providers.kubernetesGateway = {
             enabled = true;
             experimentalChannel = true;
           };
-        };
-        gateway = {
-          enabled = false;
+          gateway.enabled = false;
         };
       };
     };
