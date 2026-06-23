@@ -133,31 +133,52 @@ in
       inherit (cfg) nodeIP serverAddr tokenFile;
     };
 
-    services.knix.manifests = {
-      rke2-canal-config.content = {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChartConfig";
-        metadata = {
-          name = "rke2-canal";
-          namespace = "kube-system";
-        };
-        spec.valuesContent = builtins.toJSON {
-          flannel = {
-            backend = "wireguard";
-            iface = cfg.interface;
-          };
+    services.knix.manifests.rke2-canal-config.content = {
+      apiVersion = "helm.cattle.io/v1";
+      kind = "HelmChartConfig";
+      metadata = {
+        name = "rke2-canal";
+        namespace = "kube-system";
+      };
+      spec.valuesContent = builtins.toJSON {
+        flannel = {
+          backend = "wireguard";
+          iface = cfg.interface;
         };
       };
+    };
 
-      rke2-traefik-config.content = {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChartConfig";
-        metadata = {
-          name = "rke2-traefik";
-          namespace = "kube-system";
+    services.knix.manifests.rke2-traefik-config.content = {
+      apiVersion = "helm.cattle.io/v1";
+      kind = "HelmChartConfig";
+      metadata = {
+        name = "rke2-traefik";
+        namespace = "kube-system";
+      };
+      spec.valuesContent = builtins.toJSON {
+        ports = {
+          web = {
+            port = 80;
+            expose = {
+              default = true;
+            };
+            exposedPort = 80;
+            protocol = "TCP";
+          };
+          websecure = {
+            port = 443;
+            expose = {
+              default = true;
+            };
+            exposedPort = 443;
+            protocol = "TCP";
+            tls = {
+              enabled = true;
+            };
+          };
         };
-        spec.valuesContent = builtins.toJSON {
-          providers.kubernetesGateway = {
+        providers = {
+          kubernetesGateway = {
             enabled = true;
             experimentalChannel = true;
           };
