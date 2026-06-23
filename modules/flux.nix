@@ -19,12 +19,6 @@ with lib;
           description = "Whether to enable the Flux addon.";
         };
 
-        version = mkOption {
-          type = types.str;
-          default = "1.12.0";
-          description = "Flux chart version.";
-        };
-
         instance = {
           version = mkOption {
             type = types.str;
@@ -107,7 +101,7 @@ with lib;
       };
 
       "flux-operator" = {
-        inherit (cfg.addons.flux) version;
+        inherit (cfg.addons.flux.operator) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
@@ -129,13 +123,13 @@ with lib;
       };
 
       "tofu-controller" = {
+        inherit (cfg.addons.flux.tofu) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-YQRWHQwNn+Du9LNcveCBzTnacRDtWNJHwvXxeIxtKcc=";
         name = "tofu-controller";
         repo = "https://flux-iac.github.io/tofu-controller";
         targetNamespace = "flux-system";
-        version = cfg.addons.flux.tofu.version;
         values = recursiveUpdate {
           awsPackage.install = false;
           runner.serviceAccount.allowedNamespaces = [
