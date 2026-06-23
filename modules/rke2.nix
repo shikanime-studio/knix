@@ -111,55 +111,72 @@ in
       "vm.max_map_count" = 262144;
     };
 
-    services.rke2 = {
-      enable = true;
-      inherit (cfg) manifests role;
-      cisHardening = true;
-      nodeLabel = mapAttrsToList (name: value: "${name}=${value}") cfg.labels;
-      autoDeployCharts = mapAttrs (_: mkAutoDeployChart) cfg.charts;
-      extraFlags = [
-        "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
-        "--cni=multus,canal"
-        "--ingress-controller=traefik"
-        "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
-        "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
-        "--service-cidr=${cfg.serviceCidr}"
-        "--secrets-encryption"
-      ]
-      ++ optional (cfg.tlsSan != [ ]) "--tls-san=${concatStringsSep "," cfg.tlsSan}";
-      gracefulNodeShutdown.enable = true;
-    }
-    // {
-      inherit (cfg) nodeIP serverAddr tokenFile;
-    };
-
-    services.knix.manifests = {
-      rke2-canal-config.content = {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChartConfig";
-        metadata = {
-          name = "rke2-canal";
-          namespace = "kube-system";
-        };
-        spec.valuesContent = builtins.toJSON {
-          flannel = {
-            backend = "wireguard";
-            iface = cfg.interface;
-          };
-        };
+    services = {
+      rke2 = {
+        enable = true;
+        inherit (cfg) manifests role;
+        cisHardening = true;
+        nodeLabel = mapAttrsToList (name: value: "${name}=${value}") cfg.labels;
+        autoDeployCharts = mapAttrs (_: mkAutoDeployChart) cfg.charts;
+        extraFlags = [
+          "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
+          "--cni=multus,canal"
+          "--ingress-controller=traefik"
+          "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
+          "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
+          "--service-cidr=${cfg.serviceCidr}"
+          "--secrets-encryption"
+        ]
+        ++ optional (cfg.tlsSan != [ ]) "--tls-san=${concatStringsSep "," cfg.tlsSan}";
+        gracefulNodeShutdown.enable = true;
+      }
+      // {
+        inherit (cfg) nodeIP serverAddr tokenFile;
       };
 
-      rke2-traefik-config.content = {
-        apiVersion = "helm.cattle.io/v1";
-        kind = "HelmChartConfig";
-        metadata = {
-          name = "rke2-traefik";
-          namespace = "kube-system";
+      knix.manifests = {
+        rke2-canal-config.content = {
+          apiVersion = "helm.cattle.io/v1";
+          kind = "HelmChartConfig";
+          metadata = {
+            name = "rke2-canal";
+            namespace = "kube-system";
+          };
+          spec.valuesContent = builtins.toJSON {
+            flannel = {
+              backend = "wireguard";
+              iface = cfg.interface;
+            };
+          };
         };
-        spec.valuesContent = builtins.toJSON {
-          providers.kubernetesGateway = {
-            enabled = true;
-            experimentalChannel = true;
+
+        rke2-traefik-config.content = {
+          apiVersion = "helm.cattle.io/v1";
+          kind = "HelmChartConfig";
+          metadata = {
+            name = "rke2-traefik";
+            namespace = "kube-system";
+          };
+          spec.valuesContent = builtins.toJSON {
+            ports = {
+              web = {
+                port = 80;
+                expose.default = true;
+                exposedPort = 80;
+                protocol = "TCP";
+              };
+              websecure = {
+                port = 443;
+                expose.default = true;
+                exposedPort = 443;
+                protocol = "TCP";
+                tls.enabled = true;
+              };
+            };
+            providers.kubernetesGateway = {
+              enabled = true;
+              experimentalChannel = true;
+            };
           };
         };
       };
