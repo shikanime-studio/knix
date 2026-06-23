@@ -245,9 +245,9 @@ All options live under `services.knix.*`.
 | Option                                           | Default    | Purpose                       |
 | ------------------------------------------------ | ---------- | ----------------------------- |
 | `services.knix.addons.flux.enable`               | `true`     | Enable Flux CD                |
-| `services.knix.charts.flux.version`              | `"0.46.0"` | Flux instance chart version   |
-| `services.knix.charts."flux-operator".version`   | `"0.46.0"` | Flux operator chart version   |
-| `services.knix.charts."tofu-controller".version` | `"0.16.2"` | tofu-controller chart version |
+| `services.knix.addons.flux.instance.version`     | `"0.46.0"` | Flux instance chart version   |
+| `services.knix.addons.flux.operator.version`     | `"0.46.0"` | Flux operator chart version   |
+| `services.knix.addons.flux.tofu.version`         | `"0.16.2"` | tofu-controller chart version |
 
 Flux instance sync is passed through
 `services.knix.addons.flux.instance.extraConfig.instance.sync`.
@@ -257,7 +257,7 @@ Flux instance sync is passed through
 | Option                                      | Default    | Purpose                                      |
 | ------------------------------------------- | ---------- | -------------------------------------------- |
 | `services.knix.addons.longhorn.enable`      | `true`     | Enable Longhorn                              |
-| `services.knix.charts.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
+| `services.knix.addons.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
 | `services.knix.addons.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
 
 Longhorn also keeps the existing disk helper used by the cluster layout.

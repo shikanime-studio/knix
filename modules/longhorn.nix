@@ -19,6 +19,12 @@ with lib;
           description = "Whether to enable the Longhorn addon.";
         };
 
+        version = mkOption {
+          type = types.str;
+          default = "1.12.0";
+          description = "Longhorn chart version.";
+        };
+
         extraConfig = mkOption {
           type = types.attrsOf types.raw;
           default = { };
@@ -45,13 +51,13 @@ with lib;
   config = mkIf cfg.addons.longhorn.enable {
     services.knix = {
       charts.longhorn = {
+        inherit (cfg.addons.longhorn) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
         name = "longhorn";
         repo = "https://charts.longhorn.io";
         targetNamespace = "longhorn-system";
-        version = "1.12.0";
         values = recursiveUpdate {
           defaultSettings = {
             allowCollectingLonghornUsageMetrics = false;

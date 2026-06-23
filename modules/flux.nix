@@ -19,22 +19,46 @@ with lib;
           description = "Whether to enable the Flux addon.";
         };
 
-        instance.extraConfig = mkOption {
-          type = types.attrsOf types.raw;
-          default = { };
-          description = "Additional Flux instance chart values.";
+        instance = {
+          version = mkOption {
+            type = types.str;
+            default = "0.46.0";
+            description = "Flux instance chart version.";
+          };
+
+          extraConfig = mkOption {
+            type = types.attrsOf types.raw;
+            default = { };
+            description = "Additional Flux instance chart values.";
+          };
         };
 
-        operator.extraConfig = mkOption {
-          type = types.attrsOf types.raw;
-          default = { };
-          description = "Additional Flux operator chart values.";
+        operator = {
+          version = mkOption {
+            type = types.str;
+            default = "0.46.0";
+            description = "Flux operator chart version.";
+          };
+
+          extraConfig = mkOption {
+            type = types.attrsOf types.raw;
+            default = { };
+            description = "Additional Flux operator chart values.";
+          };
         };
 
-        tofu.extraConfig = mkOption {
-          type = types.attrsOf types.raw;
-          default = { };
-          description = "Additional tofu-controller chart values.";
+        tofu = {
+          version = mkOption {
+            type = types.str;
+            default = "0.16.2";
+            description = "tofu-controller chart version.";
+          };
+
+          extraConfig = mkOption {
+            type = types.attrsOf types.raw;
+            default = { };
+            description = "Additional tofu-controller chart values.";
+          };
         };
       };
     };
@@ -45,13 +69,13 @@ with lib;
   config = mkIf cfg.addons.flux.enable {
     services.knix.charts = {
       flux = {
+        inherit (cfg.addons.flux) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
         name = "flux-instance";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance";
         targetNamespace = "flux-system";
-        version = "0.46.0";
         values = recursiveUpdate {
           instance = {
             cluster.networkPolicy = true;
@@ -77,13 +101,13 @@ with lib;
       };
 
       "flux-operator" = {
+        inherit (cfg.addons.flux) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
         name = "flux-operator";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator";
         targetNamespace = "flux-system";
-        version = "0.46.0";
         values = recursiveUpdate {
           web = {
             networkPolicy.create = true;
@@ -105,7 +129,7 @@ with lib;
         name = "tofu-controller";
         repo = "https://flux-iac.github.io/tofu-controller";
         targetNamespace = "flux-system";
-        version = "0.16.2";
+        version = cfg.addons.flux.tofu.version;
         values = recursiveUpdate {
           awsPackage.install = false;
           runner.serviceAccount.allowedNamespaces = [
