@@ -69,13 +69,13 @@ with lib;
   config = mkIf cfg.addons.flux.enable {
     services.knix.charts = {
       flux = {
+        inherit (cfg.addons.flux) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
         name = "flux-instance";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance";
         targetNamespace = "flux-system";
-        version = cfg.addons.flux.instance.version;
         values = recursiveUpdate {
           instance = {
             cluster.networkPolicy = true;
@@ -101,13 +101,13 @@ with lib;
       };
 
       "flux-operator" = {
+        inherit (cfg.addons.flux) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
         name = "flux-operator";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator";
         targetNamespace = "flux-system";
-        version = cfg.addons.flux.operator.version;
         values = recursiveUpdate {
           web = {
             networkPolicy.create = true;

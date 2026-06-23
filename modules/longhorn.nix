@@ -51,13 +51,13 @@ with lib;
   config = mkIf cfg.addons.longhorn.enable {
     services.knix = {
       charts.longhorn = {
+        inherit (cfg.addons.longhorn) version;
         createNamespace = true;
         failurePolicy = "abort";
         hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
         name = "longhorn";
         repo = "https://charts.longhorn.io";
         targetNamespace = "longhorn-system";
-        version = cfg.addons.longhorn.version;
         values = recursiveUpdate {
           defaultSettings = {
             allowCollectingLonghornUsageMetrics = false;
