@@ -42,6 +42,7 @@ in
         spec.valuesContent = builtins.toJSON (
           recursiveUpdate {
             gateway.enabled = false;
+            ingressClass.enabled = false;
             ports = {
               web = {
                 port = 80;
@@ -57,9 +58,12 @@ in
                 tls.enabled = true;
               };
             };
-            providers.kubernetesGateway = {
-              enabled = true;
-              experimentalChannel = true;
+            providers = {
+              kubernetesIngress.enabled = false;
+              kubernetesGateway = {
+                enabled = true;
+                experimentalChannel = true;
+              };
             };
           } cfg.addons.traefik.extraConfig
         );

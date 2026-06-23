@@ -121,7 +121,7 @@ in
         extraFlags = [
           "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
           "--cni=multus,canal"
-          "--ingress-controller=traefik"
+          "--ingress-controller=none"
           "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
           "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
           "--service-cidr=${cfg.serviceCidr}"
