@@ -161,7 +161,6 @@ in
             enabled = true;
             experimentalChannel = true;
           };
-          gateway.enabled = false;
         };
       };
     };
