@@ -60,10 +60,7 @@ with lib;
             replicaAutoBalance = "best-effort";
             restoreVolumeRecurringJob = true;
           };
-          persistence = {
-            defaultClassReplicaCount = 2;
-            defaultFsType = "xfs";
-          };
+          persistence.defaultClass = false;
         } cfg.addons.longhorn.extraConfig;
       };
       labels = {
