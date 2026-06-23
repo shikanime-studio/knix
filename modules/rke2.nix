@@ -148,6 +148,47 @@ in
       };
     };
 
+    services.knix.manifests.rke2-traefik-config.content = {
+      apiVersion = "helm.cattle.io/v1";
+      kind = "HelmChartConfig";
+      metadata = {
+        name = "rke2-traefik";
+        namespace = "kube-system";
+      };
+      spec.valuesContent = builtins.toJSON {
+        ports = {
+          web = {
+            port = 80;
+            expose = {
+              default = true;
+            };
+            exposedPort = 80;
+            protocol = "TCP";
+          };
+          websecure = {
+            port = 443;
+            expose = {
+              default = true;
+            };
+            exposedPort = 443;
+            protocol = "TCP";
+            tls = {
+              enabled = true;
+            };
+          };
+        };
+        providers = {
+          kubernetesGateway = {
+            enabled = true;
+            experimentalChannel = true;
+          };
+        };
+        gateway = {
+          enabled = false;
+        };
+      };
+    };
+
     networking.firewall = {
       # IPv6 egress is constrained to local, link-local, and ULA prefixes that
       # the cluster uses. Global IPv6 traffic is rejected unless explicitly
