@@ -133,17 +133,34 @@ in
       inherit (cfg) nodeIP serverAddr tokenFile;
     };
 
-    services.knix.manifests.rke2-canal-config.content = {
-      apiVersion = "helm.cattle.io/v1";
-      kind = "HelmChartConfig";
-      metadata = {
-        name = "rke2-canal";
-        namespace = "kube-system";
+    services.knix.manifests = {
+      rke2-canal-config.content = {
+        apiVersion = "helm.cattle.io/v1";
+        kind = "HelmChartConfig";
+        metadata = {
+          name = "rke2-canal";
+          namespace = "kube-system";
+        };
+        spec.valuesContent = builtins.toJSON {
+          flannel = {
+            backend = "wireguard";
+            iface = cfg.interface;
+          };
+        };
       };
-      spec.valuesContent = builtins.toJSON {
-        flannel = {
-          backend = "wireguard";
-          iface = cfg.interface;
+
+      rke2-traefik-config.content = {
+        apiVersion = "helm.cattle.io/v1";
+        kind = "HelmChartConfig";
+        metadata = {
+          name = "rke2-traefik";
+          namespace = "kube-system";
+        };
+        spec.valuesContent = builtins.toJSON {
+          providers.kubernetesGateway = {
+            enabled = true;
+            experimentalChannel = true;
+          };
         };
       };
     };
