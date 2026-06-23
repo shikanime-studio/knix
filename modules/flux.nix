@@ -19,6 +19,12 @@ with lib;
           description = "Whether to enable the Flux addon.";
         };
 
+        version = mkOption {
+          type = types.str;
+          default = "1.12.0";
+          description = "Flux chart version.";
+        };
+
         instance = {
           version = mkOption {
             type = types.str;
