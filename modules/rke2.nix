@@ -146,7 +146,14 @@ in
             flannel = {
               backend = "wireguard";
               iface = cfg.interface;
+              # PersistentKeepalive prevents NAT/firewall pinhole expiry between
+              # cluster nodes. 25s is sufficient for most stateful firewalls.
+              wireguardKeepAlive = 25;
             };
+            # WireGuard overhead: 80 bytes IPv6, 60 bytes IPv4. 1450 leaves
+            # only 30 bytes headroom for IPv6, causing fragmentation drops.
+            # 1400 gives clean 80+ byte margin for both families.
+            veth_mtu = "1400";
           };
         };
 
