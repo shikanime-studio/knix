@@ -8,13 +8,13 @@ with lib;
 
 let
   cfg = config.services.knix;
+
   rke2ApiServerPort = 6443;
   rke2SupervisorPort = 9345;
   rke2KubeletPort = 10250;
   rke2EtcdClientPort = 2379;
   rke2EtcdPeerPort = 2380;
   rke2EtcdMetricsPort = 2381;
-  longhornMetricsPort = 9099;
   canalWireGuardPort = 51820;
   canalWireGuardControlPort = 51821;
   nodePortRange = {
@@ -115,27 +115,31 @@ in
     services = {
       rke2 = {
         enable = true;
-        inherit (cfg) manifests role;
+        inherit (cfg) role;
+        autoDeployCharts = optionalAttrs (cfg.role == "server") (
+          mapAttrs (_: mkAutoDeployChart) cfg.charts
+        );
         cisHardening = true;
-        nodeLabel = mapAttrsToList (name: value: "${name}=${value}") cfg.labels;
-        autoDeployCharts = mapAttrs (_: mkAutoDeployChart) cfg.charts;
-        extraFlags = [
-          "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
-          "--cni=multus,canal"
-          "--ingress-controller=none"
-          "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
-          "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
-          "--service-cidr=${cfg.serviceCidr}"
-          "--secrets-encryption"
-        ]
-        ++ optional (cfg.tlsSan != [ ]) "--tls-san=${concatStringsSep "," cfg.tlsSan}";
+        extraFlags =
+          optionals (cfg.role == "server") [
+            "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
+            "--cni=multus,canal"
+            "--ingress-controller=none"
+            "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
+            "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
+            "--service-cidr=${cfg.serviceCidr}"
+            "--secrets-encryption"
+          ]
+          ++ optional (cfg.tlsSan != [ ]) "--tls-san=${concatStringsSep "," cfg.tlsSan}";
         gracefulNodeShutdown.enable = true;
+        nodeLabel = mapAttrsToList (name: value: "${name}=${value}") cfg.labels;
+        manifests = optionalAttrs (cfg.role == "server") cfg.manifests;
       }
       // {
         inherit (cfg) nodeIP serverAddr tokenFile;
       };
 
-      knix.manifests = {
+      knix.manifests = optionalAttrs (cfg.role == "server") {
         rke2-canal-config.content = {
           apiVersion = "helm.cattle.io/v1";
           kind = "HelmChartConfig";
@@ -157,7 +161,6 @@ in
             veth_mtu = "1400";
           };
         };
-
       };
     };
 
@@ -184,7 +187,6 @@ in
       interfaces.${cfg.interface} = {
         allowedTCPPorts = [
           rke2KubeletPort
-          longhornMetricsPort
         ]
         ++ optionals (cfg.role == "server") [
           rke2ApiServerPort
