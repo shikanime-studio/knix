@@ -48,7 +48,7 @@ with lib;
     description = "Longhorn addon settings.";
   };
 
-  config = mkIf cfg.addons.longhorn.enable {
+  config = mkIf (cfg.addons.longhorn.enable && cfg.role == "server") {
     services.knix = {
       charts.longhorn = {
         inherit (cfg.addons.longhorn) version;

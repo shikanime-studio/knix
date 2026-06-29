@@ -66,7 +66,7 @@ with lib;
     description = "Flux addon settings.";
   };
 
-  config = mkIf cfg.addons.flux.enable {
+  config = mkIf (cfg.addons.flux.enable && cfg.role == "server") {
     services.knix.charts = {
       flux = {
         inherit (cfg.addons.flux.instance) version;
