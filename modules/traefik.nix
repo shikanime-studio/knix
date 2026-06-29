@@ -30,7 +30,7 @@ in
     description = "Traefik addon settings.";
   };
 
-  config = mkIf cfg.addons.traefik.enable {
+  config = mkIf (cfg.addons.traefik.enable && cfg.role == "server") {
     services = {
       knix.manifests.rke2-traefik-config.content = {
         apiVersion = "helm.cattle.io/v1";

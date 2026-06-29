@@ -108,6 +108,7 @@ in
       # Conntrack and mmap ceilings for the number of pods, volumes, and
       # long-running components this cluster layout expects.
       "net.netfilter.nf_conntrack_max" = 262144;
+      "net.netfilter.nf_conntrack_buckets" = 65536;
       "vm.max_map_count" = 262144;
     };
 
@@ -182,13 +183,15 @@ in
       '';
       interfaces.${cfg.interface} = {
         allowedTCPPorts = [
+          rke2KubeletPort
+          longhornMetricsPort
+        ]
+        ++ optionals (cfg.role == "server") [
           rke2ApiServerPort
           rke2SupervisorPort
-          rke2KubeletPort
           rke2EtcdClientPort
           rke2EtcdPeerPort
           rke2EtcdMetricsPort
-          longhornMetricsPort
         ];
         allowedUDPPorts = [
           canalWireGuardPort

@@ -242,12 +242,12 @@ All options live under `services.knix.*`.
 
 ### Flux CD
 
-| Option                                           | Default    | Purpose                       |
-| ------------------------------------------------ | ---------- | ----------------------------- |
-| `services.knix.addons.flux.enable`               | `true`     | Enable Flux CD                |
-| `services.knix.addons.flux.instance.version`     | `"0.46.0"` | Flux instance chart version   |
-| `services.knix.addons.flux.operator.version`     | `"0.46.0"` | Flux operator chart version   |
-| `services.knix.addons.flux.tofu.version`         | `"0.16.2"` | tofu-controller chart version |
+| Option                                       | Default    | Purpose                       |
+| -------------------------------------------- | ---------- | ----------------------------- |
+| `services.knix.addons.flux.enable`           | `true`     | Enable Flux CD                |
+| `services.knix.addons.flux.instance.version` | `"0.46.0"` | Flux instance chart version   |
+| `services.knix.addons.flux.operator.version` | `"0.46.0"` | Flux operator chart version   |
+| `services.knix.addons.flux.tofu.version`     | `"0.16.2"` | tofu-controller chart version |
 
 Flux instance sync is passed through
 `services.knix.addons.flux.instance.extraConfig.instance.sync`.
