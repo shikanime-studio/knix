@@ -69,7 +69,7 @@ in
         );
       };
 
-      rke2.extraFlags = [ "--ingress-controller=traefik" ];
+      rke2.extraFlags = optionals (cfg.role == "server") [ "--ingress-controller=traefik" ];
     };
   };
 }
