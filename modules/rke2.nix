@@ -52,47 +52,20 @@ in
     # conntrack capacity, and the TCP buffer/window sizing used by the overlay
     # paths on both IPv4 and IPv6.
     boot.kernel.sysctl = {
-      # File descriptor and inode watcher ceilings. Longhorn, Flux, and
-      # Kubernetes controllers can fan out across many processes and watched
-      # paths, so the defaults are too small for a real cluster.
-      "fs.file-max" = 2097152;
-      "fs.inotify.max_user_instances" = 8192;
-      "fs.inotify.max_user_watches" = 524288;
-
       # Bridge netfilter is required so kube-proxy and the CNI can see traffic
       # that crosses Linux bridges.
       "net.bridge.bridge-nf-call-ip6tables" = 1;
       "net.bridge.bridge-nf-call-iptables" = 1;
 
-      # TCP queue sizing and congestion control tuned for overlay networking
-      # and service traffic under sustained load.
-      "net.core.default_qdisc" = "fq";
-      "net.core.netdev_max_backlog" = 16384;
-      "net.core.rmem_default" = 7340032;
-      "net.core.rmem_max" = 16777216;
-      "net.core.somaxconn" = 4096;
-      "net.core.wmem_default" = 7340032;
-      "net.core.wmem_max" = 16777216;
-
-      # Disable reverse-path filtering on the interfaces that participate in
-      # routing and overlays, then enable IPv4 forwarding for the cluster.
+      # Calico uses asymmetric routes; strict RPF drops pod-to-pod packets. rt-0
+      # on WAN interface so tunnels/overlays do not undo the relaxed default.
       "net.ipv4.conf.all.rp_filter" = 0;
       "net.ipv4.conf.default.rp_filter" = 0;
       "net.ipv4.conf.${cfg.interface}.rp_filter" = 0;
-      "net.ipv4.ip_forward" = 1;
 
-      # Preserve room for ephemeral ports, neighbor cache growth, and keep TCP
-      # sessions stable across noisy networks.
-      "net.ipv4.ip_local_port_range" = "1024 65535";
-      "net.ipv4.neigh.default.gc_thresh1" = 1024;
-      "net.ipv4.neigh.default.gc_thresh2" = 2048;
-      "net.ipv4.neigh.default.gc_thresh3" = 4096;
+      # Enable IPv4 forwarding for the cluster.
+      "net.ipv4.ip_forward" = 1;
       "net.ipv4.tcp_congestion_control" = "bbr";
-      "net.ipv4.tcp_fin_timeout" = 15;
-      "net.ipv4.tcp_keepalive_time" = 600;
-      "net.ipv4.tcp_mtu_probing" = 1;
-      "net.ipv4.tcp_rmem" = "4096 87380 16777216";
-      "net.ipv4.tcp_wmem" = "4096 65536 16777216";
 
       # Mirror the IPv4 forwarding posture on IPv6 and accept Router
       # Advertisements on the cluster-facing interface.
@@ -108,7 +81,6 @@ in
       # Conntrack and mmap ceilings for the number of pods, volumes, and
       # long-running components this cluster layout expects.
       "net.netfilter.nf_conntrack_max" = 262144;
-      "net.netfilter.nf_conntrack_buckets" = 65536;
       "vm.max_map_count" = 262144;
     };
 
@@ -150,7 +122,6 @@ in
           spec.valuesContent = builtins.toJSON {
             flannel = {
               backend = "wireguard";
-              iface = cfg.interface;
               # PersistentKeepalive prevents NAT/firewall pinhole expiry between
               # cluster nodes. 25s is sufficient for most stateful firewalls.
               wireguardKeepAlive = 25;
