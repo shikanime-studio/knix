@@ -150,7 +150,6 @@ in
           spec.valuesContent = builtins.toJSON {
             flannel = {
               backend = "wireguard";
-              iface = cfg.interface;
               # PersistentKeepalive prevents NAT/firewall pinhole expiry between
               # cluster nodes. 25s is sufficient for most stateful firewalls.
               wireguardKeepAlive = 25;
