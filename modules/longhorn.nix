@@ -7,6 +7,8 @@
 
 let
   cfg = config.services.knix;
+
+  longhornMetricsPort = 9099;
 in
 with lib;
 {
@@ -48,43 +50,15 @@ with lib;
     description = "Longhorn addon settings.";
   };
 
-  config = mkIf (cfg.addons.longhorn.enable && cfg.role == "server") {
-    services.knix = {
-      charts.longhorn = {
-        inherit (cfg.addons.longhorn) version;
-        createNamespace = true;
-        failurePolicy = "abort";
-        hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
-        name = "longhorn";
-        repo = "https://charts.longhorn.io";
-        targetNamespace = "longhorn-system";
-        values = recursiveUpdate {
-          defaultSettings = {
-            allowCollectingLonghornUsageMetrics = false;
-            defaultDataLocality = "best-effort";
-            defaultReplicaCount = 2;
-            replicaAutoBalance = "best-effort";
-            restoreVolumeRecurringJob = true;
-          };
-          persistence.createStorageClass = false;
-        } cfg.addons.longhorn.extraConfig;
-      };
-      labels = {
-        "node.longhorn.io/create-default-disk" = "config";
-      };
+  config = mkIf cfg.addons.longhorn.enable {
+    boot = {
+      kernelModules = [
+        "dm_crypt"
+        "iscsi_tcp"
+      ];
+
+      supportedFilesystems = [ "nfs" ];
     };
-
-    boot.kernelModules = [
-      "dm_crypt"
-      "iscsi_tcp"
-    ];
-
-    services.openiscsi = {
-      enable = true;
-      name = "iqn.2026-06.io.shikanime:${config.networking.hostName}";
-    };
-
-    boot.supportedFilesystems = [ "nfs" ];
 
     environment.systemPackages = with pkgs; [
       cryptsetup
@@ -93,121 +67,160 @@ with lib;
       openiscsi
     ];
 
-    systemd.tmpfiles.rules = [
-      "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
+    networking.firewall.interfaces.${cfg.interface}.allowedTCPPorts = [
+      longhornMetricsPort
     ];
-    systemd.services.rke2-longhorn-default-disks-config = {
-      description = "Apply Longhorn default-disks-config annotation";
-      wants = [ "rke2-server.service" ];
-      after = [ "rke2-server.service" ];
-      wantedBy = [ "multi-user.target" ];
-      environment = {
-        KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
-        MOUNT_ROOT = cfg.addons.longhorn.mountRoot;
-        STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK = toString cfg.addons.longhorn.storageReservedPercentageForDefaultDisk;
+
+    services = {
+      knix = {
+        charts.longhorn = {
+          inherit (cfg.addons.longhorn) version;
+          createNamespace = true;
+          failurePolicy = "abort";
+          hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
+          name = "longhorn";
+          repo = "https://charts.longhorn.io";
+          targetNamespace = "longhorn-system";
+          values = recursiveUpdate {
+            defaultSettings = {
+              allowCollectingLonghornUsageMetrics = false;
+              defaultDataLocality = "best-effort";
+              defaultReplicaCount = 2;
+              replicaAutoBalance = "best-effort";
+              restoreVolumeRecurringJob = true;
+            };
+            persistence.createStorageClass = false;
+          } cfg.addons.longhorn.extraConfig;
+        };
+        labels = {
+          "node.longhorn.io/create-default-disk" = "config";
+        };
       };
-      serviceConfig.Type = "oneshot";
-      preStart = ''
-        until ${pkgs.kubectl}/bin/kubectl get node ${config.networking.hostName} >/dev/null 2>&1; do
-          sleep 1
-        done
-      '';
-      script = ''
-        disk_source() {
-          mount_path="$1"
 
-            ${pkgs.util-linux}/bin/findmnt -n -o SOURCE --target "$mount_path" 2>/dev/null \
-              | ${pkgs.coreutils}/bin/tail -n 1 || true
-          }
+      openiscsi = {
+        enable = true;
+        name = "iqn.2026-06.io.shikanime:${config.networking.hostName}";
+      };
+    };
 
-          disk_tags() {
-            mount_path="$1"
-            source="$(disk_source "$mount_path")"
+    systemd = {
+      tmpfiles.rules = [
+        "L+ /usr/local/bin - - - - /run/current-system/sw/bin/"
+      ];
 
-            rotational="$(${pkgs.util-linux}/bin/lsblk -ndo ROTA "$source" 2>/dev/null \
-              | ${pkgs.coreutils}/bin/head -n 1 \
-              | ${pkgs.gnused}/bin/sed 's/[[:space:]]//g')"
-
-            if [ -z "$rotational" ]; then
-              return 1
-            elif [ "$rotational" = "1" ]; then
-              printf '%s\n' '["nearline"]'
-            else
-              printf '%s\n' '["standard"]'
-            fi
-          }
-
-          storage_reserved() {
-            mount_path="$1"
-            storage_reserved_percent="$2"
-
-            size="$(${pkgs.coreutils}/bin/df -B1 --output=size "$mount_path" \
-              | ${pkgs.coreutils}/bin/tail -n 1 \
-              | ${pkgs.gnused}/bin/sed 's/[[:space:]]//g')"
-            printf '%s\n' "$((size * storage_reserved_percent / 100))"
-          }
-
-          default_disk_config_entry() {
-            mount_path="$1"
-            storage_reserved_percent="$2"
-
-            if ! ${pkgs.util-linux}/bin/mountpoint -q "$mount_path"; then
-              return
-            fi
-
-            longhorn_path="$mount_path/longhorn"
-            mkdir -p "$longhorn_path"
-
-            ${pkgs.jq}/bin/jq -nc \
-              --arg path "$longhorn_path/" \
-              --argjson storageReserved "$(storage_reserved "$mount_path" "$storage_reserved_percent")" \
-              '{
-                path: $path,
-                allowScheduling: true,
-                storageReserved: $storageReserved
-              }'
-          }
-
-          disk_config_entry() {
+      services.rke2-longhorn-default-disks-config = {
+        description = "Apply Longhorn default-disks-config annotation";
+        wants = [ "rke2-server.service" ];
+        after = [ "rke2-server.service" ];
+        wantedBy = [ "multi-user.target" ];
+        environment = {
+          KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
+          MOUNT_ROOT = cfg.addons.longhorn.mountRoot;
+          STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK = toString cfg.addons.longhorn.storageReservedPercentageForDefaultDisk;
+        };
+        serviceConfig.Type = "oneshot";
+        preStart = ''
+          until ${pkgs.kubectl}/bin/kubectl get node ${config.networking.hostName} >/dev/null 2>&1; do
+            sleep 1
+          done
+        '';
+        script = ''
+          disk_source() {
             mount_path="$1"
 
-            if ! ${pkgs.util-linux}/bin/mountpoint -q "$mount_path"; then
-              return
-            fi
+              ${pkgs.util-linux}/bin/findmnt -n -o SOURCE --target "$mount_path" 2>/dev/null \
+                | ${pkgs.coreutils}/bin/tail -n 1 || true
+            }
 
-            tags="$(disk_tags "$mount_path")"
-            if [ -z "$tags" ]; then
-              return
-            fi
+            disk_tags() {
+              mount_path="$1"
+              source="$(disk_source "$mount_path")"
 
-            longhorn_path="$mount_path/longhorn"
-            mkdir -p "$longhorn_path"
+              rotational="$(${pkgs.util-linux}/bin/lsblk -ndo ROTA "$source" 2>/dev/null \
+                | ${pkgs.coreutils}/bin/head -n 1 \
+                | ${pkgs.gnused}/bin/sed 's/[[:space:]]//g')"
 
-            ${pkgs.jq}/bin/jq -nc \
-              --arg path "$longhorn_path/" \
-              --argjson tags "$tags" \
-              '{
-                path: $path,
-                allowScheduling: true,
-                tags: $tags
-              }'
-          }
+              if [ -z "$rotational" ]; then
+                return 1
+              elif [ "$rotational" = "1" ]; then
+                printf '%s\n' '["nearline"]'
+              else
+                printf '%s\n' '["standard"]'
+              fi
+            }
 
-          longhornDefaultDisksConfig="$(
-            {
-              default_disk_config_entry "/var/lib/longhorn/" "$STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK"
-              for mount_path in "''${MOUNT_ROOT}"/*; do
-                if [ -d "$mount_path" ]; then
-                  disk_config_entry "$mount_path"
-                fi
-              done
-            } | ${pkgs.jq}/bin/jq -sc '.'
-          )"
+            storage_reserved() {
+              mount_path="$1"
+              storage_reserved_percent="$2"
 
-        ${pkgs.kubectl}/bin/kubectl annotate node ${config.networking.hostName} \
-          node.longhorn.io/default-disks-config="$longhornDefaultDisksConfig" \
-          --overwrite
-      '';
+              size="$(${pkgs.coreutils}/bin/df -B1 --output=size "$mount_path" \
+                | ${pkgs.coreutils}/bin/tail -n 1 \
+                | ${pkgs.gnused}/bin/sed 's/[[:space:]]//g')"
+              printf '%s\n' "$((size * storage_reserved_percent / 100))"
+            }
+
+            default_disk_config_entry() {
+              mount_path="$1"
+              storage_reserved_percent="$2"
+
+              if ! ${pkgs.util-linux}/bin/mountpoint -q "$mount_path"; then
+                return
+              fi
+
+              longhorn_path="$mount_path/longhorn"
+              mkdir -p "$longhorn_path"
+
+              ${pkgs.jq}/bin/jq -nc \
+                --arg path "$longhorn_path/" \
+                --argjson storageReserved "$(storage_reserved "$mount_path" "$storage_reserved_percent")" \
+                '{
+                  path: $path,
+                  allowScheduling: true,
+                  storageReserved: $storageReserved
+                }'
+            }
+
+            disk_config_entry() {
+              mount_path="$1"
+
+              if ! ${pkgs.util-linux}/bin/mountpoint -q "$mount_path"; then
+                return
+              fi
+
+              tags="$(disk_tags "$mount_path")"
+              if [ -z "$tags" ]; then
+                return
+              fi
+
+              longhorn_path="$mount_path/longhorn"
+              mkdir -p "$longhorn_path"
+
+              ${pkgs.jq}/bin/jq -nc \
+                --arg path "$longhorn_path/" \
+                --argjson tags "$tags" \
+                '{
+                  path: $path,
+                  allowScheduling: true,
+                  tags: $tags
+                }'
+            }
+
+            longhornDefaultDisksConfig="$(
+              {
+                default_disk_config_entry "/var/lib/longhorn/" "$STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK"
+                for mount_path in "''${MOUNT_ROOT}"/*; do
+                  if [ -d "$mount_path" ]; then
+                    disk_config_entry "$mount_path"
+                  fi
+                done
+              } | ${pkgs.jq}/bin/jq -sc '.'
+            )"
+
+          ${pkgs.kubectl}/bin/kubectl annotate node ${config.networking.hostName} \
+            node.longhorn.io/default-disks-config="$longhornDefaultDisksConfig" \
+            --overwrite
+        '';
+      };
     };
   };
 }
