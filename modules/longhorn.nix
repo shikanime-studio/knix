@@ -72,56 +72,7 @@ with lib;
     ];
 
     services = {
-      knix = {
-        charts.longhorn = {
-          inherit (cfg.addons.longhorn) version;
-          createNamespace = true;
-          extraDeploy = [
-            {
-              apiVersion = "v1";
-              kind = "Namespace";
-              metadata = {
-                name = "longhorn-system";
-                labels = {
-                  "pod-security.kubernetes.io/audit" = "privileged";
-                  "pod-security.kubernetes.io/audit-version" = "latest";
-                  "pod-security.kubernetes.io/enforce" = "privileged";
-                  "pod-security.kubernetes.io/enforce-version" = "latest";
-                  "pod-security.kubernetes.io/warn" = "privileged";
-                  "pod-security.kubernetes.io/warn-version" = "latest";
-                };
-              };
-            }
-          ]
-          ++ optionals (cfg.addons.longhorn.extraConfig != { }) [
-            {
-              apiVersion = "helm.cattle.io/v1";
-              kind = "HelmChartConfig";
-              metadata = {
-                name = "longhorn";
-                namespace = "longhorn-system";
-              };
-              spec.valuesContent = builtins.toJSON cfg.addons.longhorn.extraConfig;
-            }
-          ];
-          failurePolicy = "abort";
-          hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
-          name = "longhorn";
-          repo = "https://charts.longhorn.io";
-          targetNamespace = "longhorn-system";
-          values = {
-            defaultSettings = {
-              allowCollectingLonghornUsageMetrics = false;
-              defaultDataLocality = "best-effort";
-              defaultReplicaCount = 2;
-              replicaAutoBalance = "best-effort";
-              restoreVolumeRecurringJob = true;
-            };
-            persistence.createStorageClass = false;
-          };
-        };
-        labels."node.longhorn.io/create-default-disk" = "config";
-      };
+      knix.labels."node.longhorn.io/create-default-disk" = "config";
 
       openiscsi = {
         enable = true;
