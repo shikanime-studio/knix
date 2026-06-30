@@ -253,11 +253,47 @@ Flux instance sync is passed through
 
 ### Longhorn
 
-| Option                                      | Default    | Purpose                                      |
-| ------------------------------------------- | ---------- | -------------------------------------------- |
-| `services.knix.addons.longhorn.enable`      | `true`     | Enable Longhorn                              |
-| `services.knix.addons.longhorn.version`     | `"1.12.0"` | Longhorn chart version                       |
-| `services.knix.addons.longhorn.extraConfig` | `{}`       | Additional Helm values merged into the chart |
+| Option                                                                  | Default    | Purpose                                                                    |
+| ----------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
+| `services.knix.addons.longhorn.enable`                                  | `true`     | Enable Longhorn                                                            |
+| `services.knix.addons.longhorn.version`                                 | `"1.12.0"` | Longhorn chart version                                                     |
+| `services.knix.addons.longhorn.extraConfig`                             | `{}`       | Additional Helm values merged into the chart                               |
+| `services.knix.addons.longhorn.mountRoot`                               | `"/mnt"`   | Mount root scanned for additional Longhorn disks                           |
+| `services.knix.addons.longhorn.storageReservedPercentageForDefaultDisk` | `30`       | Percentage of disk space reserved on the default `/var/lib/longhorn/` disk |
+
+### Traefik
+
+| Option                                     | Default | Purpose                                         |
+| ------------------------------------------ | ------- | ----------------------------------------------- |
+| `services.knix.addons.traefik.enable`      | `true`  | Enable Traefik addon                            |
+| `services.knix.addons.traefik.extraConfig` | `{}`    | Additional Helm values merged into rke2-traefik |
+
+Traefik configures Gateway API and disables Ingress by default.
+
+### Canal
+
+| Option                            | Default       | Purpose                                                     |
+| --------------------------------- | ------------- | ----------------------------------------------------------- |
+| `services.knix.canal.enable`      | `true`        | Enable Canal CNI meta-plugin                                |
+| `services.knix.canal.backend`     | `"wireguard"` | Flannel overlay backend: `host-gw`, `vxlan`, or `wireguard` |
+| `services.knix.canal.extraConfig` | `{}`          | Extra config merged into rke2-canal HelmChartConfig         |
+
+The `host-gw` backend is optimal for same-LAN clusters (zero encapsulation
+overhead). Use `vxlan` for multi-subnet clusters.
+
+### CoreDNS
+
+| Option                              | Default | Purpose                                               |
+| ----------------------------------- | ------- | ----------------------------------------------------- |
+| `services.knix.coredns.enable`      | `true`  | Enable CoreDNS node caching                           |
+| `services.knix.coredns.extraConfig` | `{}`    | Extra config merged into rke2-coredns HelmChartConfig |
+
+### Multus
+
+| Option                             | Default | Purpose                                              |
+| ---------------------------------- | ------- | ---------------------------------------------------- |
+| `services.knix.multus.enable`      | `true`  | Enable Multus CNI meta-plugin                        |
+| `services.knix.multus.extraConfig` | `{}`    | Extra config merged into rke2-multus HelmChartConfig |
 
 Longhorn also keeps the existing disk helper used by the cluster layout.
 

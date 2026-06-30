@@ -22,9 +22,11 @@ in
             name = "rke2-coredns";
             namespace = "kube-system";
           };
-          spec.valuesContent = recursiveUpdate {
-            nodelocal.enabled = true;
-          } cfg.coredns.extraConfig;
+          spec.valuesContent = builtins.toJSON (
+            recursiveUpdate {
+              nodelocal.enabled = true;
+            } cfg.coredns.extraConfig
+          );
         };
       };
     };
