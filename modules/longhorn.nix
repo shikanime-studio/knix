@@ -76,7 +76,7 @@ with lib;
         charts.longhorn = {
           inherit (cfg.addons.longhorn) version;
           createNamespace = true;
-          extraDeploy = mkMerge [
+          extraDeploy = [
             (mkIf (cfg.addons.longhorn.extraConfig != { }) {
               apiVersion = "helm.cattle.io/v1";
               kind = "HelmChartConfig";

@@ -103,7 +103,7 @@ with lib;
       "flux-operator" = {
         inherit (cfg.addons.flux.operator) version;
         createNamespace = true;
-        extraDeploy = mkMerge [
+        extraDeploy = [
           (mkIf (cfg.addons.flux.operator.extraConfig != { }) {
             apiVersion = "helm.cattle.io/v1";
             kind = "HelmChartConfig";
@@ -134,7 +134,7 @@ with lib;
       "tofu-controller" = {
         inherit (cfg.addons.flux.tofu) version;
         createNamespace = true;
-        extraDeploy = mkMerge [
+        extraDeploy = [
           (mkIf (cfg.addons.flux.tofu.extraConfig != { }) {
             apiVersion = "helm.cattle.io/v1";
             kind = "HelmChartConfig";
