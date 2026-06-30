@@ -31,13 +31,17 @@ let
 
   mkExtraFlags =
     attrs:
-    mapAttrsToList (
-      name: value:
-      let
-        v = if isList value then concatStringsSep "," value else value;
-      in
-      if v == true then "--${name}" else "--${name}=${v}"
-    ) attrs;
+    concatLists (
+      mapAttrsToList (
+        name: value:
+        if value == true then
+          [ "--${name}" ]
+        else if builtins.isList value then
+          map (v: "--${name}=${toString v}") value
+        else
+          [ "--${name}=${toString value}" ]
+      ) attrs
+    );
 
   mkManifests = manifests: optionalAttrs (cfg.role == "server") manifests;
 in
