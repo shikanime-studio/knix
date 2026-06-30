@@ -124,7 +124,7 @@ with lib;
             };
 
             extraDeploy = mkOption {
-              type = types.listOf types.attrsOf types.raw;
+              type = types.listOf types.attrs;
               default = [ ];
               description = "Extra resources deployed alongside the chart via RKE2 extraDeploy.";
             };
