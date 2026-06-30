@@ -19,6 +19,12 @@ with lib;
           description = "Whether to enable the Flux addon.";
         };
 
+        version = mkOption {
+          type = types.str;
+          default = "2.8.8";
+          description = "Flux chart version.";
+        };
+
         instance = {
           version = mkOption {
             type = types.str;
@@ -91,8 +97,9 @@ with lib;
           cluster.networkPolicy = true;
           distribution = {
             registry = "ghcr.io/fluxcd";
-            version = "2.x";
+            version = cfg.addons.flux.version;
           };
+          kustomize.migrateResources = false;
           kustomize.patches = [
             {
               patch = builtins.toJSON [
