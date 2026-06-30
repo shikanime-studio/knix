@@ -207,7 +207,7 @@ Enable Longhorn when you want persistent storage managed by the cluster:
 {
   services.knix = {
     enable = true;
-    addons.longhorn.enable = true;
+    longhorn.enable = true;
     labels = {
       "node.longhorn.io/create-default-disk" = "config";
     };
@@ -255,11 +255,10 @@ Flux instance sync is passed through
 
 | Option                                                                  | Default    | Purpose                                                                    |
 | ----------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
-| `services.knix.addons.longhorn.enable`                                  | `true`     | Enable Longhorn                                                            |
-| `services.knix.addons.longhorn.version`                                 | `"1.12.0"` | Longhorn chart version                                                     |
-| `services.knix.addons.longhorn.extraConfig`                             | `{}`       | Additional Helm values merged into the chart                               |
-| `services.knix.addons.longhorn.mountRoot`                               | `"/mnt"`   | Mount root scanned for additional Longhorn disks                           |
-| `services.knix.addons.longhorn.storageReservedPercentageForDefaultDisk` | `30`       | Percentage of disk space reserved on the default `/var/lib/longhorn/` disk |
+| `services.knix.longhorn.enable`                                  | `true`     | Enable Longhorn                                                            |
+| `services.knix.longhorn.extraConfig`                             | `{}`       | Additional Helm values merged into the chart                               |
+| `services.knix.longhorn.mountRoot`                               | `"/mnt"`   | Mount root scanned for additional Longhorn disks                           |
+| `services.knix.longhorn.storageReservedPercentageForDefaultDisk` | `30`       | Percentage of disk space reserved on the default `/var/lib/longhorn/` disk |
 
 ### Traefik
 

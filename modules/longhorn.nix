@@ -12,25 +12,13 @@ let
 in
 with lib;
 {
-  options.services.knix.addons.longhorn = mkOption {
+  options.services.knix.longhorn = mkOption {
     type = types.submodule {
       options = {
         enable = mkOption {
           type = types.bool;
           default = true;
           description = "Whether to enable the Longhorn addon.";
-        };
-
-        version = mkOption {
-          type = types.str;
-          default = "1.12.0";
-          description = "Longhorn chart version.";
-        };
-
-        extraConfig = mkOption {
-          type = types.attrsOf types.raw;
-          default = { };
-          description = "Additional Longhorn chart values.";
         };
 
         mountRoot = mkOption {
@@ -50,7 +38,7 @@ with lib;
     description = "Longhorn addon settings.";
   };
 
-  config = mkIf cfg.addons.longhorn.enable {
+  config = mkIf cfg.longhorn.enable {
     boot = {
       kernelModules = [
         "dm_crypt"
@@ -92,8 +80,8 @@ with lib;
         wantedBy = [ "multi-user.target" ];
         environment = {
           KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
-          MOUNT_ROOT = cfg.addons.longhorn.mountRoot;
-          STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK = toString cfg.addons.longhorn.storageReservedPercentageForDefaultDisk;
+          MOUNT_ROOT = cfg.longhorn.mountRoot;
+          STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK = toString cfg.longhorn.storageReservedPercentageForDefaultDisk;
         };
         serviceConfig.Type = "oneshot";
         preStart = ''
