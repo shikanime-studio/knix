@@ -76,7 +76,24 @@ with lib;
         charts.longhorn = {
           inherit (cfg.addons.longhorn) version;
           createNamespace = true;
-          extraDeploy = mkIf (cfg.addons.longhorn.extraConfig != { }) [
+          extraDeploy = [
+            {
+              apiVersion = "v1";
+              kind = "Namespace";
+              metadata = {
+                name = "longhorn-system";
+                labels = {
+                  "pod-security.kubernetes.io/audit" = "privileged";
+                  "pod-security.kubernetes.io/audit-version" = "latest";
+                  "pod-security.kubernetes.io/enforce" = "privileged";
+                  "pod-security.kubernetes.io/enforce-version" = "latest";
+                  "pod-security.kubernetes.io/warn" = "privileged";
+                  "pod-security.kubernetes.io/warn-version" = "latest";
+                };
+              };
+            }
+          ]
+          ++ optionals (cfg.addons.longhorn.extraConfig != { }) [
             {
               apiVersion = "helm.cattle.io/v1";
               kind = "HelmChartConfig";
