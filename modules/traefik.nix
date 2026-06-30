@@ -41,7 +41,7 @@ in
           name = "rke2-traefik";
           namespace = "kube-system";
         };
-        spec.valuesContent = builtins.toJSON (
+        spec.valuesContent = toJSON (
           recursiveUpdate {
             gateway.enabled = false;
             ingressClass.enabled = false;

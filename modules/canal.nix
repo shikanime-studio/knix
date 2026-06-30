@@ -60,7 +60,7 @@ in
           name = "rke2-canal";
           namespace = "kube-system";
         };
-        spec.valuesContent = builtins.toJSON (
+        spec.valuesContent = toJSON (
           recursiveUpdate {
             flannel = {
               inherit (cfg.canal) backend;
