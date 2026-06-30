@@ -50,9 +50,7 @@ in
 
     services.knix = {
       # Canal CNI flag
-      extraConfig = mkIf (cfg.role == "server") {
-        cni = mkAfter [ "canal" ];
-      };
+      extraConfig.cni = mkIf (cfg.role == "server") (mkAfter [ "canal" ]);
 
       # Canal HelmChartConfig — uses services.knix.canal options
       manifests.rke2-canal-config.content = {
@@ -67,17 +65,6 @@ in
             flannel = {
               inherit (cfg.canal) backend;
             };
-            # veth MTU depends on backend encapsulation overhead
-            # host-gw: 0 overhead → 1500
-            # vxlan: -50 bytes → 1450 (safe)
-            # wireguard: -80 bytes IPv6 → 1400 (safe)
-            veth_mtu =
-              if cfg.canal.backend == "host-gw" then
-                "1500"
-              else if cfg.canal.backend == "vxlan" then
-                "1450"
-              else
-                "1400"; # wireguard
           } cfg.canal.extraConfig
         );
       };
@@ -88,7 +75,7 @@ in
         wireGuardPort = 51820;
         wireGuardControlPort = 51821;
       in
-      [
+      mkIf (cfg.canal.backend == "wireguard") [
         wireGuardPort
         wireGuardControlPort
       ];
