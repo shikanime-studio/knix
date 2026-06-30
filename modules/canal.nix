@@ -7,6 +7,12 @@ let
 in
 {
   options.services.knix.canal = {
+    enable = {
+      type = types.bool;
+      default = true;
+      description = "Enable Canal CNI meta-plugin.";
+    };
+
     backend = mkOption {
       type = types.enum [
         "host-gw"
@@ -38,7 +44,7 @@ in
     };
   };
 
-  config = {
+  config = mkIf cfg.canal.enable {
     # Ensure WireGuard kernel module is loaded when using wireguard backend
     boot.kernelModules = optional (cfg.canal.backend == "wireguard") "wireguard";
 
