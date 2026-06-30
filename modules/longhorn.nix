@@ -76,17 +76,15 @@ with lib;
         charts.longhorn = {
           inherit (cfg.addons.longhorn) version;
           createNamespace = true;
-          extraDeploy = [
-            (mkIf (cfg.addons.longhorn.extraConfig != { }) {
-              apiVersion = "helm.cattle.io/v1";
-              kind = "HelmChartConfig";
-              metadata = {
-                name = "longhorn";
-                namespace = "longhorn-system";
-              };
-              spec.valuesContent = toJSON cfg.addons.longhorn.extraConfig;
-            })
-          ];
+          extraDeploy = optionals (cfg.addons.longhorn.extraConfig != { }) {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "longhorn";
+              namespace = "longhorn-system";
+            };
+            spec.valuesContent = toJSON cfg.addons.longhorn.extraConfig;
+          };
           failurePolicy = "abort";
           hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
           name = "longhorn";

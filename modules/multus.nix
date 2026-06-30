@@ -7,7 +7,7 @@ let
 in
 {
   options.services.knix.multus = {
-    enable = {
+    enable = mkOption {
       type = types.bool;
       default = true;
       description = "Enable Multus CNI meta-plugin.";
