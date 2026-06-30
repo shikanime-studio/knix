@@ -43,11 +43,8 @@ in
     boot.kernelModules = optional (cfg.backend == "wireguard") "wireguard";
 
     services.knix = {
-      # Canal CNI selection and flannel backend flag
-      extraConfig.cni = [
-        "multus"
-        "canal"
-      ];
+      # Canal CNI flag
+      extraConfig.cni = mkAfter [ "canal" ];
 
       # Canal HelmChartConfig — uses services.knix.canal options
       manifests.rke2-canal-config.content = {
