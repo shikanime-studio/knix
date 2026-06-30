@@ -57,7 +57,7 @@ in
         spec.valuesContent = builtins.toJSON (
           recursiveUpdate {
             flannel = {
-              inherit (cfg) backend;
+              inherit (cfg.canal) backend;
             };
             # veth MTU depends on backend encapsulation overhead
             # host-gw: 0 overhead → 1500
