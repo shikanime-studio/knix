@@ -27,7 +27,7 @@ let
   mkNodeLabels = labels: mapAttrsToList (name: value: "${name}=${value}") labels;
 
   mkAutoDeployCharts =
-    charts: optionalAttrs (cfg.role == "server") mapAttrs (_: mkAutoDeployChart) charts;
+    charts: optionalAttrs (cfg.role == "server") (mapAttrs (_: mkAutoDeployChart) charts);
 
   mkExtraFlags =
     attrs:
