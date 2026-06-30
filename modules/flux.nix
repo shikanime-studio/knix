@@ -82,7 +82,7 @@ with lib;
             apiVersion = "helm.cattle.io/v1";
             kind = "HelmChartConfig";
             metadata = {
-              name = "flux-instance";
+              name = "flux";
               namespace = "flux-system";
             };
             spec.valuesContent = builtins.toJSON cfg.addons.flux.instance.extraConfig;
