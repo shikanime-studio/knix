@@ -235,7 +235,6 @@ All options live under `services.knix.*`.
 | `services.knix.nodeIP`               | `null`                      | Node IPs passed to RKE2                  |
 | `services.knix.serverAddr`           | `""`                        | RKE2 server address                      |
 | `services.knix.tokenFile`            | `null`                      | RKE2 join token file                     |
-| `services.knix.tlsSan`               | `[]`                        | TLS SANs passed to RKE2                  |
 | `services.knix.role`                 | `"server"`                  | RKE2 node role: `"server"` or `"agent"`  |
 | `services.knix.nodeCidrMaskSize`     | `24`                        | IPv4 node CIDR mask size                 |
 | `services.knix.nodeCidrMaskSizeIPv6` | `112`                       | IPv6 node CIDR mask size                 |

@@ -75,12 +75,6 @@ with lib;
       description = "The token file passed to RKE2.";
     };
 
-    tlsSan = mkOption {
-      type = types.listOf types.str;
-      default = [ ];
-      description = "The TLS SANs passed to RKE2.";
-    };
-
     charts = mkOption {
       type = types.attrsOf (
         types.submodule {
@@ -149,6 +143,18 @@ with lib;
       );
       default = { };
       description = "Manifest settings used by Knix modules.";
+    };
+
+    extraConfig = mkOption {
+      type = types.attrsOf (types.either types.str (types.either types.bool (types.listOf types.str)));
+      default = { };
+      description = ''
+        Extra RKE2 flags expressed as an attrset of flag name to value.
+        String values render as --name=value. List values are comma
+        joined: --name=v1,v2. Boolean true renders as bare --name.
+        Merged from all knix modules and joined into
+        services.rke2.extraFlags by mkExtraFlags.
+      '';
     };
   };
 }

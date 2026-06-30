@@ -31,8 +31,10 @@ in
   };
 
   config = mkIf cfg.addons.traefik.enable {
-    services = {
-      knix.manifests.rke2-traefik-config.content = {
+    services.knix = {
+      extraConfig.ingress-controller = "traefik";
+
+      manifests.rke2-traefik-config.content = {
         apiVersion = "helm.cattle.io/v1";
         kind = "HelmChartConfig";
         metadata = {
@@ -68,8 +70,6 @@ in
           } cfg.addons.traefik.extraConfig
         );
       };
-
-      rke2.extraFlags = optionals (cfg.role == "server") [ "--ingress-controller=traefik" ];
     };
   };
 }

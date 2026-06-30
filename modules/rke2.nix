@@ -9,19 +9,6 @@ with lib;
 let
   cfg = config.services.knix;
 
-  rke2ApiServerPort = 6443;
-  rke2SupervisorPort = 9345;
-  rke2KubeletPort = 10250;
-  rke2EtcdClientPort = 2379;
-  rke2EtcdPeerPort = 2380;
-  rke2EtcdMetricsPort = 2381;
-  canalWireGuardPort = 51820;
-  canalWireGuardControlPort = 51821;
-  nodePortRange = {
-    from = 30000;
-    to = 32767;
-  };
-
   mkAutoDeployChart =
     chart:
     let
@@ -36,6 +23,23 @@ let
           inherit (chart) failurePolicy;
         };
       };
+
+  mkNodeLabels = labels: mapAttrsToList (name: value: "${name}=${value}") labels;
+
+  mkAutoDeployCharts =
+    charts: optionalAttrs (cfg.role == "server") mapAttrs (_: mkAutoDeployChart) charts;
+
+  mkExtraFlags =
+    attrs:
+    mapAttrsToList (
+      name: value:
+      let
+        v = if isList value then concatStringsSep "," value else value;
+      in
+      if v == true then "--${name}" else "--${name}=${v}"
+    ) attrs;
+
+  mkManifests = manifests: optionalAttrs (cfg.role == "server") manifests;
 in
 {
   config = mkIf cfg.enable {
@@ -112,55 +116,32 @@ in
       "vm.max_map_count" = 262144;
     };
 
-    services = {
-      rke2 = {
-        enable = true;
-        inherit (cfg) role;
-        autoDeployCharts = optionalAttrs (cfg.role == "server") (
-          mapAttrs (_: mkAutoDeployChart) cfg.charts
-        );
-        cisHardening = true;
-        extraFlags =
-          optionals (cfg.role == "server") [
-            "--cluster-cidr=${cfg.clusterCidr},${cfg.clusterCidrIPv6}"
-            "--cni=multus,canal"
-            "--ingress-controller=none"
-            "--kube-controller-manager-arg=node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
-            "--kube-controller-manager-arg=node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
-            "--service-cidr=${cfg.serviceCidr}"
-            "--secrets-encryption"
-          ]
-          ++ optional (cfg.tlsSan != [ ]) "--tls-san=${concatStringsSep "," cfg.tlsSan}";
-        gracefulNodeShutdown.enable = true;
-        nodeLabel = mapAttrsToList (name: value: "${name}=${value}") cfg.labels;
-        manifests = optionalAttrs (cfg.role == "server") cfg.manifests;
-      }
-      // {
-        inherit (cfg) nodeIP serverAddr tokenFile;
-      };
+    services.knix.extraConfig = optionalAttrs (cfg.role == "server") {
+      cluster-cidr = [
+        cfg.clusterCidr
+        cfg.clusterCidrIPv6
+      ];
+      ingress-controller = mkDefault "none";
+      kube-controller-manager-arg = [
+        "node-cidr-mask-size-ipv4=${toString cfg.nodeCidrMaskSize}"
+        "node-cidr-mask-size-ipv6=${toString cfg.nodeCidrMaskSizeIPv6}"
+      ];
+      service-cidr = cfg.serviceCidr;
+      secrets-encryption = true;
+    };
 
-      knix.manifests = optionalAttrs (cfg.role == "server") {
-        rke2-canal-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-canal";
-            namespace = "kube-system";
-          };
-          spec.valuesContent = builtins.toJSON {
-            flannel = {
-              backend = "wireguard";
-              # PersistentKeepalive prevents NAT/firewall pinhole expiry between
-              # cluster nodes. 25s is sufficient for most stateful firewalls.
-              wireguardKeepAlive = 25;
-            };
-            # WireGuard overhead: 80 bytes IPv6, 60 bytes IPv4. 1450 leaves
-            # only 30 bytes headroom for IPv6, causing fragmentation drops.
-            # 1400 gives clean 80+ byte margin for both families.
-            veth_mtu = "1400";
-          };
-        };
-      };
+    services.rke2 = {
+      enable = true;
+      inherit (cfg) role;
+      autoDeployCharts = mkAutoDeployCharts cfg.charts;
+      cisHardening = true;
+      extraFlags = mkExtraFlags cfg.extraConfig;
+      gracefulNodeShutdown.enable = true;
+      nodeLabel = mkNodeLabels cfg.labels;
+      manifests = mkManifests cfg.manifests;
+    }
+    // {
+      inherit (cfg) nodeIP serverAddr tokenFile;
     };
 
     networking.firewall = {
@@ -183,23 +164,32 @@ in
         ip6tables -D OUTPUT -o ${cfg.interface} -d fd01::/108 -j ACCEPT 2>/dev/null || true
         ip6tables -D OUTPUT -o ${cfg.interface} -d 2000::/3 -j REJECT --reject-with icmp6-addr-unreachable 2>/dev/null || true
       '';
-      interfaces.${cfg.interface} = {
-        allowedTCPPorts = [
-          rke2KubeletPort
-        ]
-        ++ optionals (cfg.role == "server") [
-          rke2ApiServerPort
-          rke2SupervisorPort
-          rke2EtcdClientPort
-          rke2EtcdPeerPort
-          rke2EtcdMetricsPort
-        ];
-        allowedUDPPorts = [
-          canalWireGuardPort
-          canalWireGuardControlPort
-        ];
-        allowedTCPPortRanges = [ nodePortRange ];
-      };
+      interfaces.${cfg.interface} =
+        let
+          rke2ApiServerPort = 6443;
+          rke2SupervisorPort = 9345;
+          rke2KubeletPort = 10250;
+          rke2EtcdClientPort = 2379;
+          rke2EtcdPeerPort = 2380;
+          rke2EtcdMetricsPort = 2381;
+          nodePortRange = {
+            from = 30000;
+            to = 32767;
+          };
+        in
+        {
+          allowedTCPPorts = [
+            rke2KubeletPort
+          ]
+          ++ optionals (cfg.role == "server") [
+            rke2ApiServerPort
+            rke2SupervisorPort
+            rke2EtcdClientPort
+            rke2EtcdPeerPort
+            rke2EtcdMetricsPort
+          ];
+          allowedTCPPortRanges = [ nodePortRange ];
+        };
     };
   };
 }
