@@ -122,6 +122,12 @@ with lib;
               default = { };
               description = "Rendered values for the chart.";
             };
+
+            extraDeploy = mkOption {
+              type = types.listOf types.raw;
+              default = [ ];
+              description = "Extra resources deployed alongside the chart via RKE2 extraDeploy.";
+            };
           };
         }
       );

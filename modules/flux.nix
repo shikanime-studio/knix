@@ -103,40 +103,60 @@ with lib;
       "flux-operator" = {
         inherit (cfg.addons.flux.operator) version;
         createNamespace = true;
+        extraDeploy = mkMerge [
+          (mkIf (cfg.addons.flux.operator.extraConfig != { }) {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "flux-operator";
+              namespace = "flux-system";
+            };
+            spec.valuesContent = builtins.toJSON cfg.addons.flux.operator.extraConfig;
+          })
+        ];
         failurePolicy = "abort";
         hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
         name = "flux-operator";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator";
         targetNamespace = "flux-system";
-        values = recursiveUpdate {
-          web = {
-            networkPolicy.create = true;
-            config.authentication = {
-              anonymous = {
-                groups = [ "system:masters" ];
-                username = "admin";
-              };
-              type = "Anonymous";
+        values.web = {
+          networkPolicy.create = true;
+          config.authentication = {
+            anonymous = {
+              groups = [ "system:masters" ];
+              username = "admin";
             };
+            type = "Anonymous";
           };
-        } cfg.addons.flux.operator.extraConfig;
+        };
       };
 
       "tofu-controller" = {
         inherit (cfg.addons.flux.tofu) version;
         createNamespace = true;
+        extraDeploy = mkMerge [
+          (mkIf (cfg.addons.flux.tofu.extraConfig != { }) {
+            apiVersion = "helm.cattle.io/v1";
+            kind = "HelmChartConfig";
+            metadata = {
+              name = "tofu-controller";
+              namespace = "flux-system";
+            };
+            spec.valuesContent = builtins.toJSON cfg.addons.flux.tofu.extraConfig;
+          })
+        ];
         failurePolicy = "abort";
         hash = "sha256-YQRWHQwNn+Du9LNcveCBzTnacRDtWNJHwvXxeIxtKcc=";
         name = "tofu-controller";
         repo = "https://flux-iac.github.io/tofu-controller";
         targetNamespace = "flux-system";
-        values = recursiveUpdate {
+        values = {
           awsPackage.install = false;
           runner.serviceAccount.allowedNamespaces = [
             "flux-system"
             "shikanime"
           ];
-        } cfg.addons.flux.tofu.extraConfig;
+        };
       };
     };
 
