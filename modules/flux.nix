@@ -159,13 +159,7 @@ with lib;
         name = "tofu-controller";
         repo = "https://flux-iac.github.io/tofu-controller";
         targetNamespace = "flux-system";
-        values = {
-          awsPackage.install = false;
-          runner.serviceAccount.allowedNamespaces = [
-            "flux-system"
-            "shikanime"
-          ];
-        };
+        values.awsPackage.install = false;
       };
     };
 
