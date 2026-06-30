@@ -20,7 +20,7 @@ let
       baseChart
       // {
         extraFieldDefinitions = (baseChart.extraFieldDefinitions or { }) // {
-          inherit (chart) failurePolicy;
+          spec.failurePolicy = chart.failurePolicy;
         };
       };
 
