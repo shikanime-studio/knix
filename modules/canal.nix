@@ -50,7 +50,7 @@ in
 
     services.knix = {
       # Canal CNI flag
-      extraConfig.cni = mkAfter [ "canal" ];
+      extraConfig.cni = mkIf (cfg.role == "server") (mkAfter [ "canal" ]);
 
       # Canal HelmChartConfig — uses services.knix.canal options
       manifests.rke2-canal-config.content = {
