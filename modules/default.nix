@@ -1,6 +1,7 @@
 {
   imports = [
     ./canal.nix
+    ./coredns.nix
     ./knix.nix
     ./flux.nix
     ./longhorn.nix
