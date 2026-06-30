@@ -76,12 +76,23 @@ with lib;
         charts.longhorn = {
           inherit (cfg.addons.longhorn) version;
           createNamespace = true;
+          extraDeploy = mkMerge [
+            (mkIf (cfg.addons.longhorn.extraConfig != { }) {
+              apiVersion = "helm.cattle.io/v1";
+              kind = "HelmChartConfig";
+              metadata = {
+                name = "longhorn";
+                namespace = "longhorn-system";
+              };
+              spec.valuesContent = builtins.toJSON cfg.addons.longhorn.extraConfig;
+            })
+          ];
           failurePolicy = "abort";
           hash = "sha256-hpuyBwGxVEc2BvHolnsn808kSKLf5uuJcPHK5pVzhPU=";
           name = "longhorn";
           repo = "https://charts.longhorn.io";
           targetNamespace = "longhorn-system";
-          values = recursiveUpdate {
+          values = {
             defaultSettings = {
               allowCollectingLonghornUsageMetrics = false;
               defaultDataLocality = "best-effort";
@@ -90,11 +101,9 @@ with lib;
               restoreVolumeRecurringJob = true;
             };
             persistence.createStorageClass = false;
-          } cfg.addons.longhorn.extraConfig;
+          };
         };
-        labels = {
-          "node.longhorn.io/create-default-disk" = "config";
-        };
+        labels."node.longhorn.io/create-default-disk" = "config";
       };
 
       openiscsi = {
