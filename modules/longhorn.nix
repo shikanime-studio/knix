@@ -7,12 +7,10 @@
 
 let
   cfg = config.services.knix;
-
-  longhornMetricsPort = 9099;
 in
 with lib;
 {
-  options.services.knix.longhorn = mkOption {
+  options.services.knix.addons.longhorn = mkOption {
     type = types.submodule {
       options = {
         enable = mkOption {
@@ -38,7 +36,7 @@ with lib;
     description = "Longhorn addon settings.";
   };
 
-  config = mkIf cfg.longhorn.enable {
+  config = mkIf cfg.addons.longhorn.enable {
     boot = {
       kernelModules = [
         "dm_crypt"
@@ -55,9 +53,11 @@ with lib;
       openiscsi
     ];
 
-    networking.firewall.interfaces.${cfg.interface}.allowedTCPPorts = [
-      longhornMetricsPort
-    ];
+    networking.firewall.interfaces.${cfg.interface}.allowedTCPPorts =
+      let
+        longhornMetricsPort = 9099;
+      in
+      [ longhornMetricsPort ];
 
     services = {
       knix.labels."node.longhorn.io/create-default-disk" = "config";
@@ -80,8 +80,8 @@ with lib;
         wantedBy = [ "multi-user.target" ];
         environment = {
           KUBECONFIG = "/etc/rancher/rke2/rke2.yaml";
-          MOUNT_ROOT = cfg.longhorn.mountRoot;
-          STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK = toString cfg.longhorn.storageReservedPercentageForDefaultDisk;
+          MOUNT_ROOT = cfg.addons.longhorn.mountRoot;
+          STORAGE_RESERVED_PERCENTAGE_FOR_DEFAULT_DISK = toString cfg.addons.longhorn.storageReservedPercentageForDefaultDisk;
         };
         serviceConfig.Type = "oneshot";
         preStart = ''

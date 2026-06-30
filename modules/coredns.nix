@@ -6,7 +6,7 @@ let
   cfg = config.services.knix;
 in
 {
-  options.services.knix.coredns = {
+  options.services.knix.addons.coredns = {
     enable = mkOption {
       type = types.bool;
       default = true;
@@ -20,9 +20,9 @@ in
     };
   };
 
-  config = mkIf cfg.coredns.enable {
+  config = mkIf cfg.addons.coredns.enable {
     services.knix = {
-      extraConfig.disable = mkIf (!cfg.coredns.enable) [ "rke2-coredns" ];
+      extraConfig.disable = mkIf (!cfg.addons.coredns.enable) [ "rke2-coredns" ];
 
       manifests.rke2-coredns-config.content = {
         apiVersion = "helm.cattle.io/v1";
@@ -34,7 +34,7 @@ in
         spec.valuesContent = builtins.toJSON (
           recursiveUpdate {
             nodelocal.enabled = true;
-          } cfg.coredns.extraConfig
+          } cfg.addons.coredns.extraConfig
         );
       };
     };
