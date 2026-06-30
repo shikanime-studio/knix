@@ -34,7 +34,7 @@ in
           name = "rke2-multus";
           namespace = "kube-system";
         };
-        spec.valuesContent = toJSON cfg.multus.extraConfig;
+        spec.valuesContent = builtins.toJSON cfg.multus.extraConfig;
       };
     };
   };

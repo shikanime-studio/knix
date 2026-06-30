@@ -79,7 +79,7 @@ with lib;
               name = "flux-instance";
               namespace = "flux-system";
             };
-            spec.valuesContent = toJSON cfg.addons.flux.instance.extraConfig;
+            spec.valuesContent = builtins.toJSON cfg.addons.flux.instance.extraConfig;
           }
         ];
         failurePolicy = "abort";
@@ -120,7 +120,7 @@ with lib;
               name = "flux-operator";
               namespace = "flux-system";
             };
-            spec.valuesContent = toJSON cfg.addons.flux.operator.extraConfig;
+            spec.valuesContent = builtins.toJSON cfg.addons.flux.operator.extraConfig;
           }
         ];
         failurePolicy = "abort";
@@ -151,7 +151,7 @@ with lib;
               name = "tofu-controller";
               namespace = "flux-system";
             };
-            spec.valuesContent = toJSON cfg.addons.flux.tofu.extraConfig;
+            spec.valuesContent = builtins.toJSON cfg.addons.flux.tofu.extraConfig;
           }
         ];
         failurePolicy = "abort";

@@ -84,7 +84,7 @@ with lib;
                 name = "longhorn";
                 namespace = "longhorn-system";
               };
-              spec.valuesContent = toJSON cfg.addons.longhorn.extraConfig;
+              spec.valuesContent = builtins.toJSON cfg.addons.longhorn.extraConfig;
             }
           ];
           failurePolicy = "abort";
