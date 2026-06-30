@@ -95,14 +95,18 @@ with lib;
           };
           kustomize.patches = [
             {
-              patch = ''
-                - op: add
-                  path: /spec/decryption
-                  value:
-                    provider: sops
-                    secretRef:
-                      name: sops-age
-              '';
+              patch = builtins.toJSON [
+                {
+                  op = "add";
+                  path = "/spec/decryption";
+                  value = {
+                    provider = "sops";
+                    secretRef = {
+                      name = "sops-age";
+                    };
+                  };
+                }
+              ];
               target.kind = "Kustomization";
             }
           ];
