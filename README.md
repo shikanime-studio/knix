@@ -253,12 +253,12 @@ Flux instance sync is passed through
 
 ### Longhorn
 
-| Option                                                                  | Default    | Purpose                                                                    |
-| ----------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------- |
-| `services.knix.longhorn.enable`                                  | `true`     | Enable Longhorn                                                            |
-| `services.knix.longhorn.extraConfig`                             | `{}`       | Additional Helm values merged into the chart                               |
-| `services.knix.longhorn.mountRoot`                               | `"/mnt"`   | Mount root scanned for additional Longhorn disks                           |
-| `services.knix.longhorn.storageReservedPercentageForDefaultDisk` | `30`       | Percentage of disk space reserved on the default `/var/lib/longhorn/` disk |
+| Option                                                                  | Default  | Purpose                                                                    |
+| ----------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------- |
+| `services.knix.addons.longhorn.enable`                                  | `true`   | Enable Longhorn                                                            |
+| `services.knix.addons.longhorn.extraConfig`                             | `{}`     | Additional Helm values merged into the chart                               |
+| `services.knix.addons.longhorn.mountRoot`                               | `"/mnt"` | Mount root scanned for additional Longhorn disks                           |
+| `services.knix.addons.longhorn.storageReservedPercentageForDefaultDisk` | `30`     | Percentage of disk space reserved on the default `/var/lib/longhorn/` disk |
 
 ### Traefik
 
@@ -282,10 +282,10 @@ overhead). Use `vxlan` for multi-subnet clusters.
 
 ### CoreDNS
 
-| Option                              | Default | Purpose                                               |
-| ----------------------------------- | ------- | ----------------------------------------------------- |
-| `services.knix.coredns.enable`      | `true`  | Enable CoreDNS node caching                           |
-| `services.knix.coredns.extraConfig` | `{}`    | Extra config merged into rke2-coredns HelmChartConfig |
+| Option                                     | Default | Purpose                                               |
+| ------------------------------------------ | ------- | ----------------------------------------------------- |
+| `services.knix.addons.coredns.enable`      | `true`  | Enable CoreDNS node caching                           |
+| `services.knix.addons.coredns.extraConfig` | `{}`    | Extra config merged into rke2-coredns HelmChartConfig |
 
 ### Multus
 
@@ -294,7 +294,8 @@ overhead). Use `vxlan` for multi-subnet clusters.
 | `services.knix.multus.enable`      | `true`  | Enable Multus CNI meta-plugin                        |
 | `services.knix.multus.extraConfig` | `{}`    | Extra config merged into rke2-multus HelmChartConfig |
 
-Longhorn also keeps the existing disk helper used by the cluster layout.
+Multus enables dynamic networks controller, thick plugin, and DHCP daemon set by
+default.
 
 ## How It Is Structured
 
