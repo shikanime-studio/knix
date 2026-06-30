@@ -71,49 +71,54 @@ with lib;
       flux = {
         inherit (cfg.addons.flux.instance) version;
         createNamespace = true;
+        extraDeploy = optionals (cfg.addons.flux.instance.extraConfig != { }) {
+          apiVersion = "helm.cattle.io/v1";
+          kind = "HelmChartConfig";
+          metadata = {
+            name = "flux-instance";
+            namespace = "flux-system";
+          };
+          spec.valuesContent = toJSON cfg.addons.flux.instance.extraConfig;
+        };
         failurePolicy = "abort";
         hash = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
         name = "flux-instance";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance";
         targetNamespace = "flux-system";
-        values = recursiveUpdate {
-          instance = {
-            cluster.networkPolicy = true;
-            distribution = {
-              registry = "ghcr.io/fluxcd";
-              version = "2.x";
-            };
-            kustomize.patches = [
-              {
-                patch = ''
-                  - op: add
-                    path: /spec/decryption
-                    value:
-                      provider: sops
-                      secretRef:
-                        name: sops-age
-                '';
-                target.kind = "Kustomization";
-              }
-            ];
+        values.instance = {
+          cluster.networkPolicy = true;
+          distribution = {
+            registry = "ghcr.io/fluxcd";
+            version = "2.x";
           };
-        } cfg.addons.flux.instance.extraConfig;
+          kustomize.patches = [
+            {
+              patch = ''
+                - op: add
+                  path: /spec/decryption
+                  value:
+                    provider: sops
+                    secretRef:
+                      name: sops-age
+              '';
+              target.kind = "Kustomization";
+            }
+          ];
+        };
       };
 
       "flux-operator" = {
         inherit (cfg.addons.flux.operator) version;
         createNamespace = true;
-        extraDeploy = [
-          (mkIf (cfg.addons.flux.operator.extraConfig != { }) {
-            apiVersion = "helm.cattle.io/v1";
-            kind = "HelmChartConfig";
-            metadata = {
-              name = "flux-operator";
-              namespace = "flux-system";
-            };
-            spec.valuesContent = toJSON cfg.addons.flux.operator.extraConfig;
-          })
-        ];
+        extraDeploy = optionals (cfg.addons.flux.operator.extraConfig != { }) {
+          apiVersion = "helm.cattle.io/v1";
+          kind = "HelmChartConfig";
+          metadata = {
+            name = "flux-operator";
+            namespace = "flux-system";
+          };
+          spec.valuesContent = toJSON cfg.addons.flux.operator.extraConfig;
+        };
         failurePolicy = "abort";
         hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
         name = "flux-operator";
@@ -134,17 +139,15 @@ with lib;
       "tofu-controller" = {
         inherit (cfg.addons.flux.tofu) version;
         createNamespace = true;
-        extraDeploy = [
-          (mkIf (cfg.addons.flux.tofu.extraConfig != { }) {
-            apiVersion = "helm.cattle.io/v1";
-            kind = "HelmChartConfig";
-            metadata = {
-              name = "tofu-controller";
-              namespace = "flux-system";
-            };
-            spec.valuesContent = toJSON cfg.addons.flux.tofu.extraConfig;
-          })
-        ];
+        extraDeploy = optionals (cfg.addons.flux.tofu.extraConfig != { }) {
+          apiVersion = "helm.cattle.io/v1";
+          kind = "HelmChartConfig";
+          metadata = {
+            name = "tofu-controller";
+            namespace = "flux-system";
+          };
+          spec.valuesContent = toJSON cfg.addons.flux.tofu.extraConfig;
+        };
         failurePolicy = "abort";
         hash = "sha256-YQRWHQwNn+Du9LNcveCBzTnacRDtWNJHwvXxeIxtKcc=";
         name = "tofu-controller";

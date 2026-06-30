@@ -7,7 +7,7 @@ let
 in
 {
   options.services.knix.canal = {
-    enable = {
+    enable = mkOption {
       type = types.bool;
       default = true;
       description = "Enable Canal CNI meta-plugin.";
