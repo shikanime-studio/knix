@@ -1,9 +1,9 @@
-{ config, lib }:
+{ config, lib, ... }:
 
 with lib;
 
 let
-  cfg = config.services.knix.canal;
+  cfg = config.services.knix;
 in
 {
   options.services.knix.canal = {
@@ -40,7 +40,7 @@ in
 
   config = {
     # Ensure WireGuard kernel module is loaded when using wireguard backend
-    boot.kernelModules = optional (cfg.backend == "wireguard") "wireguard";
+    boot.kernelModules = optional (cfg.canal.backend == "wireguard") "wireguard";
 
     services.knix = {
       # Canal CNI flag
@@ -64,13 +64,13 @@ in
             # vxlan: -50 bytes → 1450 (safe)
             # wireguard: -80 bytes IPv6 → 1400 (safe)
             veth_mtu =
-              if cfg.backend == "host-gw" then
+              if cfg.canal.backend == "host-gw" then
                 "1500"
-              else if cfg.backend == "vxlan" then
+              else if cfg.canal.backend == "vxlan" then
                 "1450"
               else
                 "1400"; # wireguard
-          } cfg.extraConfig
+          } cfg.canal.extraConfig
         );
       };
     };
