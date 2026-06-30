@@ -32,7 +32,9 @@ in
 
   config = mkIf cfg.addons.traefik.enable {
     services.knix = {
-      extraConfig.ingress-controller = "traefik";
+      extraConfig = mkIf (cfg.role == "server") {
+        ingress-controller = "traefik";
+      };
 
       manifests.rke2-traefik-config.content = {
         apiVersion = "helm.cattle.io/v1";
