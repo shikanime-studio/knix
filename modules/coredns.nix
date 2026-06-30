@@ -6,18 +6,10 @@ let
   cfg = config.services.knix;
 in
 {
-  options.services.knix.coredns = {
-    enable = mkOption {
-      type = types.bool;
-      default = true;
-      description = "Enable coredns CNI meta-plugin.";
-    };
-
-    extraConfig = mkOption {
-      type = types.attrsOf types.raw;
-      default = { };
-      description = "Extra config merged into the coredns HelmChartConfig valuesContent.";
-    };
+  options.services.knix.coredns.extraConfig = mkOption {
+    type = types.attrsOf types.raw;
+    default = { };
+    description = "Extra config merged into the coredns HelmChartConfig valuesContent.";
   };
 
   config = mkIf cfg.coredns.enable {
