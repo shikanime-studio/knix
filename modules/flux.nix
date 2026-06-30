@@ -77,100 +77,72 @@ with lib;
       flux = {
         inherit (cfg.addons.flux.instance) version;
         createNamespace = true;
-        extraDeploy = mkIf (cfg.addons.flux.instance.extraConfig != { }) [
-          {
-            apiVersion = "helm.cattle.io/v1";
-            kind = "HelmChartConfig";
-            metadata = {
-              name = "flux";
-              namespace = "flux-system";
-            };
-            spec.valuesContent = builtins.toJSON cfg.addons.flux.instance.extraConfig;
-          }
-        ];
         failurePolicy = "abort";
         hash = "sha256-A7ojoUGwSKt+Vi+kFFroNroUxrJzHdLdbrYidHgg8gs=";
         name = "flux-instance";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-instance";
         targetNamespace = "flux-system";
-        values.instance = {
-          cluster.networkPolicy = true;
-          distribution = {
-            registry = "ghcr.io/fluxcd";
-            version = cfg.addons.flux.version;
-          };
-          kustomize.migrateResources = false;
-          kustomize.patches = [
-            {
-              patch = builtins.toJSON [
-                {
-                  op = "add";
-                  path = "/spec/decryption";
-                  value = {
-                    provider = "sops";
-                    secretRef = {
-                      name = "sops-age";
+        values = recursiveUpdate {
+          instance = {
+            cluster.networkPolicy = true;
+            distribution = {
+              registry = "ghcr.io/fluxcd";
+              version = cfg.addons.flux.version;
+            };
+            kustomize.patches = [
+              {
+                patch = builtins.toJSON [
+                  {
+                    op = "add";
+                    path = "/spec/decryption";
+                    value = {
+                      provider = "sops";
+                      secretRef = {
+                        name = "sops-age";
+                      };
                     };
-                  };
-                }
-              ];
-              target.kind = "Kustomization";
-            }
-          ];
-        };
+                  }
+                ];
+                target.kind = "Kustomization";
+              }
+            ];
+          };
+        } cfg.addons.flux.instance.extraConfig;
       };
 
       "flux-operator" = {
         inherit (cfg.addons.flux.operator) version;
         createNamespace = true;
-        extraDeploy = mkIf (cfg.addons.flux.operator.extraConfig != { }) [
-          {
-            apiVersion = "helm.cattle.io/v1";
-            kind = "HelmChartConfig";
-            metadata = {
-              name = "flux-operator";
-              namespace = "flux-system";
-            };
-            spec.valuesContent = builtins.toJSON cfg.addons.flux.operator.extraConfig;
-          }
-        ];
         failurePolicy = "abort";
         hash = "sha256-gt8bZ5oLw05lbUXGTzf6NBppAVuuKl9L9LH4jeROpkM=";
         name = "flux-operator";
         repo = "oci://ghcr.io/controlplaneio-fluxcd/charts/flux-operator";
         targetNamespace = "flux-system";
-        values.web = {
-          networkPolicy.create = true;
-          config.authentication = {
-            anonymous = {
-              groups = [ "system:masters" ];
-              username = "admin";
+        values = recursiveUpdate {
+          web = {
+            networkPolicy.create = true;
+            config.authentication = {
+              anonymous = {
+                groups = [ "system:masters" ];
+                username = "admin";
+              };
+              type = "Anonymous";
             };
-            type = "Anonymous";
           };
-        };
+        } cfg.addons.flux.operator.extraConfig;
       };
 
       "tofu-controller" = {
         inherit (cfg.addons.flux.tofu) version;
         createNamespace = true;
-        extraDeploy = mkIf (cfg.addons.flux.tofu.extraConfig != { }) [
-          {
-            apiVersion = "helm.cattle.io/v1";
-            kind = "HelmChartConfig";
-            metadata = {
-              name = "tofu-controller";
-              namespace = "flux-system";
-            };
-            spec.valuesContent = builtins.toJSON cfg.addons.flux.tofu.extraConfig;
-          }
-        ];
         failurePolicy = "abort";
         hash = "sha256-YQRWHQwNn+Du9LNcveCBzTnacRDtWNJHwvXxeIxtKcc=";
         name = "tofu-controller";
         repo = "https://flux-iac.github.io/tofu-controller";
         targetNamespace = "flux-system";
-        values.awsPackage.install = false;
+        values = recursiveUpdate {
+          awsPackage.install = false;
+        } cfg.addons.flux.tofu.extraConfig;
       };
     };
 

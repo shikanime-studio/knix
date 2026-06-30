@@ -29,16 +29,14 @@ in
         ];
       };
 
-      manifests = mkIf (cfg.multus.extraConfig != { }) {
-        rke2-multus-config.content = {
-          apiVersion = "helm.cattle.io/v1";
-          kind = "HelmChartConfig";
-          metadata = {
-            name = "rke2-multus";
-            namespace = "kube-system";
-          };
-          spec.valuesContent = builtins.toJSON cfg.multus.extraConfig;
+      manifests.rke2-multus-config.content = mkIf (cfg.multus.extraConfig != { }) {
+        apiVersion = "helm.cattle.io/v1";
+        kind = "HelmChartConfig";
+        metadata = {
+          name = "rke2-multus";
+          namespace = "kube-system";
         };
+        spec.valuesContent = builtins.toJSON cfg.multus.extraConfig;
       };
     };
   };
