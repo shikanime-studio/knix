@@ -44,7 +44,7 @@ in
         spec.valuesContent = builtins.toJSON (
           recursiveUpdate {
             gateway.enabled = false;
-            ingressClass.enabled = false;
+            ingressClass.enabled = true;
             ports = {
               web = {
                 port = 80;
@@ -61,7 +61,7 @@ in
               };
             };
             providers = {
-              kubernetesIngress.enabled = false;
+              kubernetesIngress.enabled = true;
               kubernetesGateway = {
                 enabled = true;
                 experimentalChannel = true;
