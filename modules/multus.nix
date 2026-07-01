@@ -40,7 +40,6 @@ in
           recursiveUpdate {
             dynamicNetworksController.enabled = true;
             thickPlugin.enabled = true;
-            manifests.dhcpDaemonSet = true;
           } cfg.multus.extraConfig
         );
       };
