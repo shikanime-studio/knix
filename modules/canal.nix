@@ -64,6 +64,7 @@ in
           recursiveUpdate {
             flannel = {
               inherit (cfg.canal) backend;
+              iface = cfg.interface;
             };
           } cfg.canal.extraConfig
         );
