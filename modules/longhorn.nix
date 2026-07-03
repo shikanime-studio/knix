@@ -5,10 +5,11 @@
   ...
 }:
 
+with lib;
+
 let
   cfg = config.services.knix;
 in
-with lib;
 {
   options.services.knix.addons.longhorn = mkOption {
     type = types.submodule {
@@ -16,7 +17,7 @@ with lib;
         enable = mkOption {
           type = types.bool;
           default = true;
-          description = "Whether to enable the Longhorn addon.";
+          description = "Whether to enable the configuration for Longhorn.";
         };
 
         mountRoot = mkOption {

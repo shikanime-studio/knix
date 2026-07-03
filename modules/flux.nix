@@ -5,10 +5,11 @@
   ...
 }:
 
+with lib;
+
 let
   cfg = config.services.knix;
 in
-with lib;
 {
   options.services.knix.addons.flux = mkOption {
     type = types.submodule {
