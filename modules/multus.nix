@@ -6,16 +6,22 @@ let
   cfg = config.services.knix;
 in
 {
-  options.services.knix.multus = {
-    enable = mkEnableOption "Multus CNI meta-plugin" // {
-      default = true;
-    };
+  options.services.knix.multus = mkOption {
+    type = types.submodule {
+      options = {
+        enable = mkEnableOption "Multus CNI meta-plugin" // {
+          default = true;
+        };
 
-    extraConfig = mkOption {
-      type = types.attrsOf types.raw;
-      default = { };
-      description = "Extra config merged into the multus HelmChartConfig valuesContent";
+        extraConfig = mkOption {
+          type = types.attrsOf types.raw;
+          default = { };
+          description = "Extra config merged into the multus HelmChartConfig valuesContent";
+        };
+      };
     };
+    default = { };
+    description = "node-exporter addon settings";
   };
 
   config = mkIf cfg.multus.enable {

@@ -6,16 +6,22 @@ let
   cfg = config.services.knix;
 in
 {
-  options.services.knix.addons.coredns = {
-    enable = mkEnableOption "CoreDNS node caching" // {
-      default = true;
-    };
+  options.services.knix.addons.coredns = mkOption {
+    type = types.submodule {
+      options = {
+        enable = mkEnableOption "CoreDNS node caching" // {
+          default = true;
+        };
 
-    extraConfig = mkOption {
-      type = types.attrsOf types.raw;
-      default = { };
-      description = "Extra config merged into the coredns HelmChartConfig valuesContent";
+        extraConfig = mkOption {
+          type = types.attrsOf types.raw;
+          default = { };
+          description = "Extra config merged into the coredns HelmChartConfig valuesContent";
+        };
+      };
     };
+    default = { };
+    description = "CoreDNS addon settings";
   };
 
   config = mkIf cfg.addons.coredns.enable {

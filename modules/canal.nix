@@ -6,40 +6,46 @@ let
   cfg = config.services.knix;
 in
 {
-  options.services.knix.canal = {
-    enable = mkEnableOption "Canal CNI meta-plugin" // {
-      default = true;
+  options.services.knix.canal = mkOption {
+    type = types.submodule {
+      options = {
+        enable = mkEnableOption "Canal CNI meta-plugin" // {
+          default = true;
+        };
+
+        backend = mkOption {
+          type = types.enum [
+            "host-gw"
+            "vxlan"
+            "wireguard"
+          ];
+          default = "wireguard";
+          description = ''
+            Flannel overlay backend.
+
+            host-gw: Direct routing tables. Zero encapsulation overhead. Requires all
+            nodes on the same Layer 2 subnet (works for same-LAN clusters).
+            Expected: ~2,200 Mbps on 2.5 Gbps NICs, ~940 Mbps on 1 Gbps NICs.
+
+            vxlan: Encapsulated VXLAN tunnels. Works across L3 networks (multi-subnet).
+            Moderate CPU overhead. Expected: ~1,500 Mbps on 2.5 Gbps NICs.
+
+            wireguard: Kernel WireGuard encryption. Highest CPU overhead due to
+            single-flow ChaCha20-Poly1305. Default. Expected: ~535 Mbps
+            on Intel N150 (single-core limited).
+          '';
+          example = "host-gw";
+        };
+
+        extraConfig = mkOption {
+          type = types.attrsOf types.raw;
+          default = { };
+          description = "Extra config merged into the canal HelmChartConfig valuesContent";
+        };
+      };
     };
-
-    backend = mkOption {
-      type = types.enum [
-        "host-gw"
-        "vxlan"
-        "wireguard"
-      ];
-      default = "wireguard";
-      description = ''
-        Flannel overlay backend.
-
-        host-gw: Direct routing tables. Zero encapsulation overhead. Requires all
-        nodes on the same Layer 2 subnet (works for same-LAN clusters).
-        Expected: ~2,200 Mbps on 2.5 Gbps NICs, ~940 Mbps on 1 Gbps NICs.
-
-        vxlan: Encapsulated VXLAN tunnels. Works across L3 networks (multi-subnet).
-        Moderate CPU overhead. Expected: ~1,500 Mbps on 2.5 Gbps NICs.
-
-        wireguard: Kernel WireGuard encryption. Highest CPU overhead due to
-        single-flow ChaCha20-Poly1305. Default. Expected: ~535 Mbps
-        on Intel N150 (single-core limited).
-      '';
-      example = "host-gw";
-    };
-
-    extraConfig = mkOption {
-      type = types.attrsOf types.raw;
-      default = { };
-      description = "Extra config merged into the canal HelmChartConfig valuesContent";
-    };
+    default = { };
+    description = "Canal addon settings";
   };
 
   config = mkIf cfg.canal.enable {
