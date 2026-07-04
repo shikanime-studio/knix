@@ -301,9 +301,6 @@ overhead). Use `vxlan` for multi-subnet clusters.
 | `services.knix.addons.node-exporter.enable`      | `true`  | Enable node-exporter                                   |
 | `services.knix.addons.node-exporter.extraConfig` | `{}`    | Extra config merged into node-exporter HelmChartConfig |
 
-Multus enables dynamic networks controller, thick plugin, and DHCP daemon set by
-default.
-
 ## How It Is Structured
 
 ```text
