@@ -11,15 +11,9 @@ let
 in
 {
   options.services.knix.addons.node-exporter = mkOption {
-    type = types.submodule {
-      options.enable = mkOption {
-        type = types.bool;
-        default = true;
-        description = "Whether to enable the configuration for node-exporter.";
-      };
+    enable = mkEnableOption "node-exporter addon" // {
+      default = true;
     };
-    default = { };
-    description = "node-exporter addon settings.";
   };
 
   config = mkIf cfg.addons.node-exporter.enable {

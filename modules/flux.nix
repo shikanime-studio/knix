@@ -14,29 +14,27 @@ in
   options.services.knix.addons.flux = mkOption {
     type = types.submodule {
       options = {
-        enable = mkOption {
-          type = types.bool;
+        enable = mkEnableOption "Flux addon" // {
           default = true;
-          description = "Whether to enable the Flux addon.";
         };
 
         version = mkOption {
           type = types.str;
           default = "2.8.8";
-          description = "Flux chart version.";
+          description = "Flux chart version";
         };
 
         instance = {
           version = mkOption {
             type = types.str;
             default = "0.46.0";
-            description = "Flux instance chart version.";
+            description = "Flux instance chart version";
           };
 
           extraConfig = mkOption {
             type = types.attrsOf types.raw;
             default = { };
-            description = "Additional Flux instance chart values.";
+            description = "Additional Flux instance chart values";
           };
         };
 
@@ -44,13 +42,13 @@ in
           version = mkOption {
             type = types.str;
             default = "0.46.0";
-            description = "Flux operator chart version.";
+            description = "Flux operator chart version";
           };
 
           extraConfig = mkOption {
             type = types.attrsOf types.raw;
             default = { };
-            description = "Additional Flux operator chart values.";
+            description = "Additional Flux operator chart values";
           };
         };
 
@@ -58,19 +56,19 @@ in
           version = mkOption {
             type = types.str;
             default = "0.16.2";
-            description = "tofu-controller chart version.";
+            description = "tofu-controller chart version";
           };
 
           extraConfig = mkOption {
             type = types.attrsOf types.raw;
             default = { };
-            description = "Additional tofu-controller chart values.";
+            description = "Additional tofu-controller chart values";
           };
         };
       };
     };
     default = { };
-    description = "Flux addon settings.";
+    description = "Flux addon settings";
   };
 
   config = mkIf cfg.addons.flux.enable {

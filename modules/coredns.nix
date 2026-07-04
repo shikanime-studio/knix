@@ -7,16 +7,14 @@ let
 in
 {
   options.services.knix.addons.coredns = {
-    enable = mkOption {
-      type = types.bool;
+    enable = mkEnableOption "CoreDNS node caching" // {
       default = true;
-      description = "Enable CoreDNS node caching.";
     };
 
     extraConfig = mkOption {
       type = types.attrsOf types.raw;
       default = { };
-      description = "Extra config merged into the coredns HelmChartConfig valuesContent.";
+      description = "Extra config merged into the coredns HelmChartConfig valuesContent";
     };
   };
 

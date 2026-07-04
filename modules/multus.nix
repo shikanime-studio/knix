@@ -7,16 +7,14 @@ let
 in
 {
   options.services.knix.multus = {
-    enable = mkOption {
-      type = types.bool;
+    enable = mkEnableOption "Multus CNI meta-plugin" // {
       default = true;
-      description = "Enable Multus CNI meta-plugin.";
     };
 
     extraConfig = mkOption {
       type = types.attrsOf types.raw;
       default = { };
-      description = "Extra config merged into the multus HelmChartConfig valuesContent.";
+      description = "Extra config merged into the multus HelmChartConfig valuesContent";
     };
   };
 

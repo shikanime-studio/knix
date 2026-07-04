@@ -11,23 +11,15 @@ let
 in
 {
   options.services.knix.addons.traefik = mkOption {
-    type = types.submodule {
-      options = {
-        enable = mkOption {
-          type = types.bool;
-          default = true;
-          description = "Whether to enable the Traefik addon.";
-        };
-
-        extraConfig = mkOption {
-          type = types.attrsOf types.raw;
-          default = { };
-          description = "Additional Traefik Helm chart values merged into rke2-traefik.";
-        };
-      };
+    enable = mkEnableOption "Traefik addon" // {
+      default = true;
     };
-    default = { };
-    description = "Traefik addon settings.";
+
+    extraConfig = mkOption {
+      type = types.attrsOf types.raw;
+      default = { };
+      description = "Additional Traefik Helm chart values merged into rke2-traefik";
+    };
   };
 
   config = mkIf cfg.addons.traefik.enable {

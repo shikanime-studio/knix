@@ -7,10 +7,8 @@ let
 in
 {
   options.services.knix.canal = {
-    enable = mkOption {
-      type = types.bool;
+    enable = mkEnableOption "Canal CNI meta-plugin" // {
       default = true;
-      description = "Enable Canal CNI meta-plugin.";
     };
 
     backend = mkOption {
@@ -40,7 +38,7 @@ in
     extraConfig = mkOption {
       type = types.attrsOf types.raw;
       default = { };
-      description = "Extra config merged into the canal HelmChartConfig valuesContent.";
+      description = "Extra config merged into the canal HelmChartConfig valuesContent";
     };
   };
 

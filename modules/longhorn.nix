@@ -14,27 +14,25 @@ in
   options.services.knix.addons.longhorn = mkOption {
     type = types.submodule {
       options = {
-        enable = mkOption {
-          type = types.bool;
+        enable = mkEnableOption "Longhorn addon" // {
           default = true;
-          description = "Whether to enable the configuration for Longhorn.";
         };
 
         mountRoot = mkOption {
           type = types.str;
           default = "/mnt";
-          description = "The mount root scanned for additional Longhorn disks.";
+          description = "The mount root scanned for additional Longhorn disks";
         };
 
         storageReservedPercentageForDefaultDisk = mkOption {
           type = types.int;
           default = 30;
-          description = "The percentage of disk space reserved on the default /var/lib/longhorn/ disk.";
+          description = "The percentage of disk space reserved on the default /var/lib/longhorn/ disk";
         };
       };
     };
     default = { };
-    description = "Longhorn addon settings.";
+    description = "Longhorn addon settings";
   };
 
   config = mkIf cfg.addons.longhorn.enable {
