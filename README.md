@@ -294,12 +294,12 @@ overhead). Use `vxlan` for multi-subnet clusters.
 | `services.knix.multus.enable`      | `true`  | Enable Multus CNI meta-plugin                        |
 | `services.knix.multus.extraConfig` | `{}`    | Extra config merged into rke2-multus HelmChartConfig |
 
-### node-exporter
+### prometheus
 
-| Option                                           | Default | Purpose                                                |
-| ------------------------------------------------ | ------- | ------------------------------------------------------ |
-| `services.knix.addons.node-exporter.enable`      | `true`  | Enable node-exporter                                   |
-| `services.knix.addons.node-exporter.extraConfig` | `{}`    | Extra config merged into node-exporter HelmChartConfig |
+| Option                                        | Default | Purpose                                             |
+| --------------------------------------------- | ------- | --------------------------------------------------- |
+| `services.knix.addons.prometheus.enable`      | `true`  | Enable prometheus                                   |
+| `services.knix.addons.prometheus.extraConfig` | `{}`    | Extra config merged into prometheus HelmChartConfig |
 
 ## How It Is Structured
 

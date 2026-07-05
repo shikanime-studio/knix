@@ -21,7 +21,7 @@ in
       };
     };
     default = { };
-    description = "node-exporter addon settings";
+    description = "multus addon settings";
   };
 
   config = mkIf cfg.multus.enable {
