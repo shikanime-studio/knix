@@ -23,25 +23,25 @@ with lib;
 
     clusterCidrIPv6 = mkOption {
       type = types.str;
-      default = "fd00::/108";
+      default = "fd00::/56";
       description = "The IPv6 pod CIDR passed to RKE2";
     };
 
     serviceCidr = mkOption {
       type = types.str;
-      default = "10.96.0.0/12,fd01::/108";
+      default = "10.96.0.0/12,fd01::/112";
       description = "The service CIDR passed to RKE2";
     };
 
     nodeCidrMaskSize = mkOption {
       type = types.int;
-      default = 20;
+      default = 24;
       description = "The IPv4 node CIDR mask size passed to the controller manager";
     };
 
     nodeCidrMaskSizeIPv6 = mkOption {
       type = types.int;
-      default = 108;
+      default = 64;
       description = "The IPv6 node CIDR mask size passed to the controller manager";
     };
 

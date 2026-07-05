@@ -237,7 +237,7 @@ All options live under `services.knix.*`.
 | `services.knix.tokenFile`            | `null`                      | RKE2 join token file                     |
 | `services.knix.role`                 | `"server"`                  | RKE2 node role: `"server"` or `"agent"`  |
 | `services.knix.nodeCidrMaskSize`     | `24`                        | IPv4 node CIDR mask size                 |
-| `services.knix.nodeCidrMaskSizeIPv6` | `112`                       | IPv6 node CIDR mask size                 |
+| `services.knix.nodeCidrMaskSizeIPv6` | `64`                        | IPv6 node CIDR mask size                 |
 
 ### Flux CD
 
