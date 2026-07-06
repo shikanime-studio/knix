@@ -21,7 +21,7 @@ in
   };
 
   config = mkIf cfg.addons.prometheus.enable {
-    extraConfig = {
+    services.knix.extraConfig = {
       # Expose scheduler for prometheus to scrape metrics
       kube-scheduler-arg = "--bind-address=0.0.0.0";
       # Expose ETCD for prometheus to scrape metrics
