@@ -6,6 +6,7 @@
     ./flux.nix
     ./longhorn.nix
     ./multus.nix
+    ./prometheus.nix
     ./rke2.nix
     ./traefik.nix
   ];
