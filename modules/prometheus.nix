@@ -26,6 +26,8 @@ in
       etcd-arg = "listen-metrics-urls=http://0.0.0.0:2379";
       # Expose scheduler for prometheus to scrape metrics
       kube-scheduler-arg = "bind-address=0.0.0.0";
+      # Expose controller for prometheus to scrape metrics
+      kube-controller-arg = "bind-address=0.0.0.0";
     };
   };
 }
