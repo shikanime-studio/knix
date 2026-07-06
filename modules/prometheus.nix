@@ -27,10 +27,5 @@ in
       # Expose ETCD for prometheus to scrape metrics
       kube-etcd-arg = "--listen-metrics-urls=http://0.0.0.0:2379";
     };
-
-    # Enable textfile collector for node_exporter (k8s DaemonSet)
-    systemd.tmpfiles.rules = [
-      "d /var/lib/node_exporter/textfile_collector 0755 root root -"
-    ];
   };
 }
