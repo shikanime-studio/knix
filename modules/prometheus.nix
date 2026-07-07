@@ -40,21 +40,33 @@ in
             job_name = "kube-scheduler";
             scheme = "https";
             metrics_path = "/metrics";
-            tls_config.ca_file = "/var/lib/rancher/rke2/server/tls/kube-scheduler/kube-scheduler.crt";
+            tls_config = {
+              ca_file = "/run/vmagent/rke2-server-ca.crt";
+              cert_file = "/run/vmagent/rke2-client-admin.crt";
+              key_file = "/run/vmagent/rke2-client-admin.key";
+            };
             static_configs = [ { targets = [ "127.0.0.1:10259" ]; } ];
           }
           {
             job_name = "kube-controller";
             scheme = "https";
             metrics_path = "/metrics";
-            tls_config.ca_file = "/var/lib/rancher/rke2/server/tls/kube-controller-manager/kube-controller-manager.crt";
+            tls_config = {
+              ca_file = "/run/vmagent/rke2-server-ca.crt";
+              cert_file = "/run/vmagent/rke2-client-admin.crt";
+              key_file = "/run/vmagent/rke2-client-admin.key";
+            };
             static_configs = [ { targets = [ "127.0.0.1:10257" ]; } ];
           }
           {
             job_name = "rke2-supervisor";
             scheme = "https";
             metrics_path = "/metrics";
-            tls_config.ca_file = "/var/lib/rancher/rke2/server/tls/server-ca.crt";
+            tls_config = {
+              ca_file = "/run/vmagent/rke2-server-ca.crt";
+              cert_file = "/run/vmagent/rke2-client-admin.crt";
+              key_file = "/run/vmagent/rke2-client-admin.key";
+            };
             static_configs = [ { targets = [ "127.0.0.1:9345" ]; } ];
           }
         ];
@@ -80,5 +92,14 @@ in
           scrape_configs = scrapeConfigs;
         };
       };
+
+    # Required for vmagent to read RKE2 local TLS endpoints without touching
+    # /var/lib/rancher/rke2/server/tls directly.
+    systemd.tmpfiles.rules = [
+      "d /run/vmagent 0750 vmagent vmagent -"
+      "L+ /run/vmagent/rke2-server-ca.crt - vmagent vmagent - /var/lib/rancher/rke2/server/tls/server-ca.crt"
+      "L+ /run/vmagent/rke2-client-admin.crt - vmagent vmagent - /var/lib/rancher/rke2/server/tls/client-admin.crt"
+      "L+ /run/vmagent/rke2-client-admin.key - vmagent vmagent - /var/lib/rancher/rke2/server/tls/client-admin.key"
+    ];
   };
 }
