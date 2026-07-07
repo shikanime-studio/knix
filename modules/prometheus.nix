@@ -32,9 +32,8 @@ in
           }
           {
             job_name = "kube-proxy";
-            scheme = "https";
+            scheme = "http";
             metrics_path = "/metrics";
-            tls_config.ca_file = "/var/lib/rancher/rke2/server/tls/kube-proxy/kube-proxy.crt";
             static_configs = [ { targets = [ "127.0.0.1:10249" ]; } ];
           }
           {
