@@ -23,7 +23,7 @@ in
   config = mkIf cfg.addons.prometheus.enable {
     services.knix.extraConfig = mkIf (cfg.role == "server") {
       # Expose ETCD for prometheus to scrape metrics
-      etcd-arg = [ "listen-metrics-urls=http://0.0.0.0:2379" ];
+      etcd-arg = [ "listen-metrics-urls=http://0.0.0.0:2381" ];
       # Expose controller manager for prometheus to scrape metrics
       kube-controller-manager-arg = [ "bind-address=0.0.0.0" ];
       # Expose scheduler for prometheus to scrape metrics
