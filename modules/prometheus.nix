@@ -10,17 +10,17 @@ let
   cfg = config.services.knix;
 in
 {
-  options.services.knix.addons.prometheus = mkOption {
+  options.services.knix.prometheus = mkOption {
     type = types.submodule {
       options.enable = mkEnableOption "prometheus addon" // {
         default = true;
       };
     };
     default = { };
-    description = "prometheus addon settings";
+    description = "prometheus settings";
   };
 
-  config = mkIf cfg.addons.prometheus.enable {
+  config = mkIf cfg.prometheus.enable {
     services =
       let
         scrapeConfigs = [

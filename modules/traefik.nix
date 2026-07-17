@@ -10,7 +10,7 @@ let
   cfg = config.services.knix;
 in
 {
-  options.services.knix.addons.traefik = mkOption {
+  options.services.knix.traefik = mkOption {
     type = types.submodule {
       options = {
         enable = mkEnableOption "Traefik addon" // {
@@ -25,10 +25,10 @@ in
       };
     };
     default = { };
-    description = "Traefik addon settings";
+    description = "Traefik settings";
   };
 
-  config = mkIf cfg.addons.traefik.enable {
+  config = mkIf cfg.traefik.enable {
     services.knix = {
       extraConfig.ingress-controller = mkIf (cfg.role == "server") [ "traefik" ];
 
@@ -65,7 +65,7 @@ in
                 experimentalChannel = true;
               };
             };
-          } cfg.addons.traefik.extraConfig
+          } cfg.traefik.extraConfig
         );
       };
     };

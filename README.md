@@ -262,10 +262,10 @@ Flux instance sync is passed through
 
 ### Traefik
 
-| Option                                     | Default | Purpose                                         |
-| ------------------------------------------ | ------- | ----------------------------------------------- |
-| `services.knix.addons.traefik.enable`      | `true`  | Enable Traefik addon                            |
-| `services.knix.addons.traefik.extraConfig` | `{}`    | Additional Helm values merged into rke2-traefik |
+| Option                              | Default | Purpose                                         |
+| ----------------------------------- | ------- | ----------------------------------------------- |
+| `services.knix.traefik.enable`      | `true`  | Enable Traefik addon                            |
+| `services.knix.traefik.extraConfig` | `{}`    | Additional Helm values merged into rke2-traefik |
 
 Traefik configures Gateway API and disables Ingress by default.
 
@@ -282,10 +282,10 @@ overhead). Use `vxlan` for multi-subnet clusters.
 
 ### CoreDNS
 
-| Option                                     | Default | Purpose                                               |
-| ------------------------------------------ | ------- | ----------------------------------------------------- |
-| `services.knix.addons.coredns.enable`      | `true`  | Enable CoreDNS node caching                           |
-| `services.knix.addons.coredns.extraConfig` | `{}`    | Extra config merged into rke2-coredns HelmChartConfig |
+| Option                              | Default | Purpose                                               |
+| ----------------------------------- | ------- | ----------------------------------------------------- |
+| `services.knix.coredns.enable`      | `true`  | Enable CoreDNS node caching                           |
+| `services.knix.coredns.extraConfig` | `{}`    | Extra config merged into rke2-coredns HelmChartConfig |
 
 ### Multus
 
@@ -296,10 +296,10 @@ overhead). Use `vxlan` for multi-subnet clusters.
 
 ### prometheus
 
-| Option                                        | Default | Purpose                                             |
-| --------------------------------------------- | ------- | --------------------------------------------------- |
-| `services.knix.addons.prometheus.enable`      | `true`  | Enable prometheus                                   |
-| `services.knix.addons.prometheus.extraConfig` | `{}`    | Extra config merged into prometheus HelmChartConfig |
+| Option                                 | Default | Purpose                                             |
+| -------------------------------------- | ------- | --------------------------------------------------- |
+| `services.knix.prometheus.enable`      | `true`  | Enable prometheus                                   |
+| `services.knix.prometheus.extraConfig` | `{}`    | Extra config merged into prometheus HelmChartConfig |
 
 ## How It Is Structured
 
